@@ -1,22 +1,22 @@
 import { Alert, Box, Button, FormField, Input, Modal, SpaceBetween } from "@cloudscape-design/components"
 import { useSelector } from "react-redux"
-import { addAlbum, albumActions, albumSelector } from "../albumSlice"
 import store, { appDispatch } from "../../../common/store"
 import { FormEvent, useEffect } from "react"
+import { addMedia, mediaActions, mediaSelector } from "../mediaSlice"
 
-export default function NewAlbumModal() {
-  const { errorMessages, newAlbumName, asyncStatus, newAlbumModalOpen } = useSelector(albumSelector)
-  const loading = asyncStatus["addAlbum"] === "pending"
+export default function NewMediaModal() {
+  const { errorMessages, newMediaUrl, asyncStatus, newMediaModalOpen } = useSelector(mediaSelector)
+  const loading = asyncStatus["addMedia"] === "pending"
 
   useEffect(() => {
-    if (asyncStatus["addAlbum"] === "fulfilled") {
+    if (asyncStatus["addMedia"] === "fulfilled") {
       onClose()
     }
-  }, [asyncStatus["addAlbum"]])
+  }, [asyncStatus["addMedia"]])
 
   function onClose() {
-    appDispatch(albumActions.clearErrorMessages())
-    appDispatch(albumActions.resetNewAlbumState())
+    appDispatch(mediaActions.clearErrorMessages())
+    appDispatch(mediaActions.resetNewMediaState())
   }
 
   async function onSubmit(e: FormEvent) {
@@ -26,13 +26,13 @@ export default function NewAlbumModal() {
 
   async function onCreate() {
     if (!validate()) return
-    await appDispatch(addAlbum())
+    await appDispatch(addMedia())
   }
 
   function validate() {
-    const { newAlbumName } = store.getState().album
-    if (newAlbumName.trim().length === 0) {
-      appDispatch(albumActions.addMissingErrorMessage("newAlbumName"))
+    const { newMediaUrl } = store.getState().media
+    if (newMediaUrl.trim().length === 0) {
+      appDispatch(mediaActions.addMissingErrorMessage("newMediaUrl"))
       return false
     }
     return true
@@ -40,8 +40,8 @@ export default function NewAlbumModal() {
 
   return (
     <Modal
-      visible={newAlbumModalOpen}
-      header="New Album"
+      visible={newMediaModalOpen}
+      header="New Media"
       closeAriaLabel="Close modal"
       onDismiss={onClose}
       footer={
@@ -72,22 +72,22 @@ export default function NewAlbumModal() {
             type="submit"
           />
           <FormField
-            label="Album name"
-            errorText={errorMessages["newAlbumName"]}
+            label="Media URL"
+            errorText={errorMessages["newMediaUrl"]}
           >
             <Input
-              value={newAlbumName}
+              value={newMediaUrl}
               placeholder="Enter value"
               onChange={event => {
-                appDispatch(albumActions.clearErrorMessages())
-                appDispatch(albumActions.updateSlice({ newAlbumName: event.detail.value }))
+                appDispatch(mediaActions.clearErrorMessages())
+                appDispatch(mediaActions.updateSlice({ newMediaUrl: event.detail.value }))
               }}
             />
           </FormField>
         </form>
-        {errorMessages["newAlbum"] && (
+        {errorMessages["newMedia"] && (
           <Alert type="error">
-            {errorMessages["newAlbum"]}
+            {errorMessages["newMedia"]}
           </Alert>
         )}
       </SpaceBetween>

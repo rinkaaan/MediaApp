@@ -2,7 +2,10 @@ import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected, Payl
 import { RootState } from "../../common/reducers"
 import { Media, MediaService } from "../../../openapi-client"
 import { getActionName } from "../../common/utils"
-import { AsyncStatus, sleep } from "../../common/typedUtils"
+import { AsyncStatus, getApiErrorMessage, sleep } from "../../common/typedUtils"
+import store, { appDispatch } from "../../common/store"
+import { mainActions } from "../mainSlice"
+import _ from "lodash"
 
 
 export interface MediaState {
@@ -11,6 +14,7 @@ export interface MediaState {
 
   // new media modal
   newMediaModalOpen: boolean;
+  newMediaUrl: string;
 
   // list media route
   medias: Array<Media> | undefined;
@@ -23,6 +27,7 @@ const initialState: MediaState = {
 
   // new media modal
   newMediaModalOpen: false,
+  newMediaUrl: "",
 
   // list media route
   medias: undefined,
@@ -49,6 +54,12 @@ export const mediaSlice = createSlice({
     resetSlice: () => {
       return initialState
     },
+    resetNewMediaState: (state) => {
+      const keysToReset = ["newMediaModalOpen", "newMediaUrl"]
+      keysToReset.forEach(key => {
+        state[key] = initialState[key]
+      })
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -64,30 +75,28 @@ export const mediaSlice = createSlice({
   }
 })
 
-// export const addAlbum = createAsyncThunk(
-//   "album/addAlbum",
-//   async (_payload, { dispatch }) => {
-//     const { newAlbumName } = store.getState().album
-//     try {
-//       const album = await AlbumService.postAlbum({ name: newAlbumName })
-//       dispatch(
-//         mainActions.addNotification({
-//           content: `Album "${album.name}" created`,
-//           type: "success",
-//         }),
-//       )
-//       let { albums } = store.getState().album
-//       if (!albums) albums = []
-//       dispatch(albumActions.updateSlice({ albums: [album, ...albums] }))
-//     } catch (e) {
-//       dispatch(albumActions.addErrorMessage({
-//         key: "newAlbum",
-//         message: getApiErrorMessage(e),
-//       }))
-//       throw new Error()
-//     }
-//   }
-// )
+export const addMedia = createAsyncThunk(
+  "media/addMedia",
+  async (_payload, { dispatch }) => {
+    const { newMediaUrl } = store.getState().media
+    try {
+      const { website } = await MediaService.postMedia({ media_url: newMediaUrl })
+      await appDispatch(queryMedia())
+      dispatch(
+        mainActions.addNotification({
+          content: `${_.capitalize(website)} media added`,
+          type: "success",
+        }),
+      )
+    } catch (e) {
+      dispatch(mediaActions.addErrorMessage({
+        key: "newMedia",
+        message: getApiErrorMessage(e),
+      }))
+      throw new Error()
+    }
+  },
+)
 
 export const queryMedia = createAsyncThunk(
   "media/queryMedia",

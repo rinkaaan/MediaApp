@@ -8,6 +8,7 @@ import { mediaActions, mediaSelector, queryMedia } from "../mediaSlice"
 import { appDispatch } from "../../../common/store"
 import ConfirmModal from "../../../components/ConfirmModal"
 import BadgeLink from "../../../components/BadgeLink"
+import NewMediaModal from "./NewMediaModal"
 
 // const items: Media[] = [
 //   {
@@ -72,7 +73,6 @@ export function Component() {
 
   return (
     <Fragment>
-
       <Cards
         loading={asyncStatus["queryMedia"] === "pending" || medias === undefined}
         onSelectionChange={({ detail }) => {
@@ -151,7 +151,7 @@ export function Component() {
           >
             <SpaceBetween size="m">
               <b>No media</b>
-              <CloudButton>Add media</CloudButton>
+              <CloudButton onClick={onCreate}>Add media</CloudButton>
             </SpaceBetween>
           </Box>
         }
@@ -193,6 +193,7 @@ export function Component() {
           </Header>
         }
       />
+      <NewMediaModal />
       <ConfirmModal
         confirmText="Delete"
         title="Delete media"

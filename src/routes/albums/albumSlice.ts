@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected, Payl
 import { RootState } from "../../common/reducers"
 import { Album, AlbumService } from "../../../openapi-client"
 import { mainActions } from "../mainSlice"
-import store from "../../common/store"
+import store, { appDispatch } from "../../common/store"
 import { getActionName } from "../../common/utils"
 import { AsyncStatus, getApiErrorMessage, sleep } from "../../common/typedUtils"
 
@@ -56,7 +56,7 @@ export const albumSlice = createSlice({
       return initialState
     },
     resetNewAlbumState: (state) => {
-      const keysToReset = ["newAlbumName"]
+      const keysToReset = ["newAlbumName", "newAlbumModalOpen"]
       keysToReset.forEach(key => {
         state[key] = initialState[key]
       })
@@ -81,16 +81,14 @@ export const addAlbum = createAsyncThunk(
   async (_payload, { dispatch }) => {
     const { newAlbumName } = store.getState().album
     try {
-      const album = await AlbumService.postAlbum({ name: newAlbumName })
+      const { name } = await AlbumService.postAlbum({ name: newAlbumName })
       dispatch(
         mainActions.addNotification({
-          content: `Album "${album.name}" created`,
+          content: `${name} album created`,
           type: "success",
         }),
       )
-      let { albums } = store.getState().album
-      if (!albums) albums = []
-      dispatch(albumActions.updateSlice({ albums: [album, ...albums] }))
+      appDispatch(queryAlbums())
     } catch (e) {
       dispatch(albumActions.addErrorMessage({
         key: "newAlbum",
