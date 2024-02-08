@@ -108,6 +108,10 @@ export function Component() {
                 onClick={(e) => {
                   e.stopPropagation()
                 }}
+                style={{
+                  width: "min-content",
+                  whiteSpace: "nowrap",
+                }}
               >
                 <CloudLink
                   href="#"

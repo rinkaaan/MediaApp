@@ -110,9 +110,6 @@ export function Component() {
             return (
               <SpaceBetween size="xs" direction="horizontal">
                 {links}
-                {/*<div className="badge">*/}
-                {/*  CheerS & Sports*/}
-                {/*</div>*/}
               </SpaceBetween>
             )
           },
