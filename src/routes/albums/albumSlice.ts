@@ -15,10 +15,17 @@ export interface AlbumState {
   newAlbumName: string;
   newAlbumModalOpen: boolean;
 
+  // rename album modal
+  renameAlbumName: string;
+  renameAlbumId: string;
+  renameAlbumModalOpen: boolean;
+
   // list albums route
   albums: Array<Album> | undefined;
   noMoreAlbums: boolean;
   searchQuery: string;
+  actionsMode: "view" | "select";
+  selectedAlbums: Array<Album>;
 }
 
 const initialState: AlbumState = {
@@ -29,10 +36,17 @@ const initialState: AlbumState = {
   newAlbumName: "",
   newAlbumModalOpen: false,
 
+  // rename album modal
+  renameAlbumName: "",
+  renameAlbumId: "",
+  renameAlbumModalOpen: false,
+
   // list albums route
   albums: undefined,
   noMoreAlbums: false,
   searchQuery: "",
+  actionsMode: "view",
+  selectedAlbums: [],
 }
 
 export const albumSlice = createSlice({
@@ -52,11 +66,24 @@ export const albumSlice = createSlice({
     addErrorMessage: (state, action: PayloadAction<{ key: string, message: string }>) => {
       state.errorMessages[action.payload.key] = action.payload.message
     },
+    toggleActionsMode: (state) => {
+      const currentMode = state.actionsMode
+      state.actionsMode = currentMode === "view" ? "select" : "view"
+      if (currentMode === "select") {
+        state.selectedAlbums = []
+      }
+    },
     resetSlice: () => {
       return initialState
     },
     resetNewAlbumState: (state) => {
       const keysToReset = ["newAlbumName", "newAlbumModalOpen"]
+      keysToReset.forEach(key => {
+        state[key] = initialState[key]
+      })
+    },
+    resetRenameAlbumState: (state) => {
+      const keysToReset = ["renameAlbumName", "renameAlbumId", "renameAlbumModalOpen"]
       keysToReset.forEach(key => {
         state[key] = initialState[key]
       })
@@ -99,12 +126,27 @@ export const addAlbum = createAsyncThunk(
   },
 )
 
+export const renameAlbum = createAsyncThunk(
+  "album/renameAlbum",
+  async (_payload, { dispatch }) => {
+    const { renameAlbumName, renameAlbumId } = store.getState().album
+    await AlbumService.putAlbumRename({ album_id: renameAlbumId, new_name: renameAlbumName })
+    dispatch(
+      mainActions.addNotification({
+        content: "Album renamed",
+        type: "success",
+      }),
+    )
+    appDispatch(queryAlbums())
+  },
+)
+
 export const queryAlbums = createAsyncThunk(
   "album/queryAlbums",
   async (_payload, { dispatch }) => {
     const { searchQuery } = store.getState().album
     const queryAlbumsOut = await AlbumService.getAlbumQuery(undefined, 30, true, searchQuery)
-    dispatch(albumActions.updateSlice({ albums: queryAlbumsOut.albums, noMoreAlbums: queryAlbumsOut.no_more_albums }))
+    dispatch(albumActions.updateSlice({ albums: queryAlbumsOut.albums, noMoreAlbums: queryAlbumsOut.no_more_albums, selectedAlbums: [] }))
     await sleep(100)
   },
 )
@@ -135,9 +177,7 @@ export const deleteAlbums = createAsyncThunk(
         type: "success",
       }),
     )
-    let { albums } = store.getState().album
-    if (!albums) albums = []
-    dispatch(albumActions.updateSlice({ albums: albums.filter(a => !albumIds.includes(a.id!)) }))
+    appDispatch(queryAlbums())
   },
 )
 

@@ -19,6 +19,7 @@ export interface MediaState {
   // list media route
   medias: Array<Media> | undefined;
   noMoreMedia: boolean;
+  selectedItems: Array<Media>;
 }
 
 const initialState: MediaState = {
@@ -32,6 +33,7 @@ const initialState: MediaState = {
   // list media route
   medias: undefined,
   noMoreMedia: false,
+  selectedItems: [],
 }
 
 export const mediaSlice = createSlice({
@@ -89,11 +91,12 @@ export const addMedia = createAsyncThunk(
         }),
       )
     } catch (e) {
-      dispatch(mediaActions.addErrorMessage({
-        key: "newMedia",
-        message: getApiErrorMessage(e),
-      }))
-      throw new Error()
+      dispatch(
+        mainActions.addNotification({
+          content: getApiErrorMessage(e),
+          type: "error",
+        }),
+      )
     }
   },
 )
@@ -102,7 +105,7 @@ export const queryMedia = createAsyncThunk(
   "media/queryMedia",
   async (_payload, { dispatch }) => {
     const queryMediaOut = await MediaService.getMediaQuery(undefined, 30, true)
-    dispatch(mediaActions.updateSlice({ medias: queryMediaOut.media, noMoreMedia: queryMediaOut.no_more_media }))
+    dispatch(mediaActions.updateSlice({ medias: queryMediaOut.media, noMoreMedia: queryMediaOut.no_more_media, selectedItems: [] }))
     await sleep(100)
   }
 )
@@ -138,6 +141,20 @@ export const queryMedia = createAsyncThunk(
 //     dispatch(albumActions.updateSlice({ albums: albums.filter(a => !albumIds.includes(a.id!)) }))
 //   }
 // )
+
+export const deleteMedias = createAsyncThunk(
+  "media/deleteMedias",
+  async (mediaIds: Array<string>, { dispatch }) => {
+    await MediaService.deleteMedia({ media_ids: mediaIds })
+    dispatch(
+      mainActions.addNotification({
+        content: "Media deleted",
+        type: "success",
+      }),
+    )
+    appDispatch(queryMedia())
+  }
+)
 
 export const mediaReducer = mediaSlice.reducer
 export const mediaActions = mediaSlice.actions

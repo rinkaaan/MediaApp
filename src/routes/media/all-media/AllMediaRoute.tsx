@@ -1,14 +1,13 @@
 import { Alert, Box, Cards, Header, SpaceBetween } from "@cloudscape-design/components"
 import { Fragment, useEffect, useState } from "react"
-import { Media } from "../../../../openapi-client"
 import { uuid } from "../../../common/typedUtils"
 import CloudButton from "../../../components/CloudButton"
 import { useSelector } from "react-redux"
-import { mediaActions, mediaSelector, queryMedia } from "../mediaSlice"
+import { addMedia, deleteMedias, mediaActions, mediaSelector, queryMedia } from "../mediaSlice"
 import { appDispatch } from "../../../common/store"
 import ConfirmModal from "../../../components/ConfirmModal"
 import BadgeLink from "../../../components/BadgeLink"
-import NewMediaModal from "./NewMediaModal"
+import { mainActions } from "../../mainSlice"
 
 // const items: Media[] = [
 //   {
@@ -48,27 +47,42 @@ import NewMediaModal from "./NewMediaModal"
 // ]
 
 export function Component() {
-  const [
-    selectedItems,
-    setSelectedItems,
-  ] = useState<Media[]>([])
-  const { asyncStatus, medias } = useSelector(mediaSelector)
+  const { asyncStatus, medias, selectedItems } = useSelector(mediaSelector)
   const isOnlyOneSelected = selectedItems.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
 
   useEffect(() => {
-    if (medias === undefined) {
-      appDispatch(queryMedia())
-    }
+    appDispatch(mediaActions.resetSlice())
+    appDispatch(queryMedia())
   }, [])
+
+  useEffect(() => {
+    if (asyncStatus["deleteMedias"] === "fulfilled") {
+      setDeleteModalVisible(false)
+    }
+  }, [asyncStatus["deleteMedias"]])
 
   function onRefresh() {
     appDispatch(queryMedia())
-    setSelectedItems([])
   }
 
-  function onCreate() {
-    appDispatch(mediaActions.updateSlice({ newMediaModalOpen: true }))
+  async function onCreate() {
+    const text = await navigator.clipboard.readText()
+
+    if (text.trim() !== "") {
+      appDispatch(mediaActions.updateSlice({ newMediaUrl: text }))
+      appDispatch(addMedia())
+    } else {
+      appDispatch(mainActions.addNotification({
+        type: "error",
+        content: "No URL found in clipboard",
+      }))
+    }
+  }
+
+  function onDelete() {
+    const mediaIds = selectedItems.map((media) => media.id!)
+    appDispatch(deleteMedias(mediaIds))
   }
 
   return (
@@ -76,7 +90,7 @@ export function Component() {
       <Cards
         loading={asyncStatus["queryMedia"] === "pending" || medias === undefined}
         onSelectionChange={({ detail }) => {
-          setSelectedItems(detail?.selectedItems ?? [])
+          appDispatch(mediaActions.updateSlice({ selectedItems: detail?.selectedItems ?? [] }))
         }}
         selectedItems={selectedItems}
         ariaLabels={{
@@ -107,6 +121,25 @@ export function Component() {
                 </BadgeLink>
               )
             })
+
+            links?.push(
+              <BadgeLink
+                key={uuid()}
+                to={item.webpage_url!}
+                className="pointer"
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+                target="_blank"
+                style={{
+                  height: "min-content",
+                  backgroundColor: "#276498",
+                }}
+              >
+                Open
+              </BadgeLink>
+            )
+
             return (
               <SpaceBetween size="xs" direction="horizontal">
                 {links}
@@ -148,7 +181,7 @@ export function Component() {
           >
             <SpaceBetween size="m">
               <b>No media</b>
-              <CloudButton onClick={onCreate}>Add media</CloudButton>
+              {/*<CloudButton onClick={onCreate}>Add media</CloudButton>*/}
             </SpaceBetween>
           </Box>
         }
@@ -182,6 +215,7 @@ export function Component() {
                     variant="primary"
                     onClick={onCreate}
                     iconName="add-plus"
+                    loading={asyncStatus["addMedia"] === "pending"}
                   />
               </SpaceBetween>
             }
@@ -190,11 +224,10 @@ export function Component() {
           </Header>
         }
       />
-      <NewMediaModal />
       <ConfirmModal
         confirmText="Delete"
         title="Delete media"
-        onConfirm={() => {}}
+        onConfirm={onDelete}
         visible={deleteModalVisible}
         onClose={() => setDeleteModalVisible(false)}
         loading={asyncStatus["deleteMedias"] === "pending"}

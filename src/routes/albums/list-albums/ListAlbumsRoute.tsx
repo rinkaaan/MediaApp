@@ -1,4 +1,4 @@
-import { Alert, Box, Cards, Header, SpaceBetween, Spinner, TextContent, TextFilter } from "@cloudscape-design/components"
+import { Alert, Box, Cards, CardsProps, Header, Icon, NonCancelableCustomEvent, SpaceBetween, Spinner, TextContent, TextFilter, TextFilterProps } from "@cloudscape-design/components"
 import { Fragment, useEffect, useState } from "react"
 import { Album } from "../../../../openapi-client"
 import CloudLink from "../../../components/CloudLink"
@@ -9,6 +9,10 @@ import NewAlbumModal from "./NewAlbumModal"
 import { useSelector } from "react-redux"
 import useScrollToBottom from "../../../hooks/useScrollToBottom"
 import ConfirmModal from "../../../components/ConfirmModal"
+import RenameAlbumModal from "./RenameAlbumModal"
+import "./style.css"
+import { mainActions } from "../../mainSlice"
+import { scrollToTop } from "../../../common/typedUtils"
 
 // const items: Album[] = [
 //   {
@@ -44,29 +48,19 @@ import ConfirmModal from "../../../components/ConfirmModal"
 // ]
 
 export function Component() {
-  const [
-    selectedItems,
-    setSelectedItems,
-  ] = useState<Album[]>([])
-  const { asyncStatus, albums, searchQuery } = useSelector(albumSelector)
+  const { asyncStatus, albums, searchQuery, actionsMode, selectedAlbums } = useSelector(albumSelector)
   // const showLoader = useDelayedTrue()
-  const isOnlyOneSelected = selectedItems.length === 1
+  const isOnlyOneSelected = selectedAlbums.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
-  useEffect(() => {
-    if (albums === undefined) {
-      appDispatch(queryAlbums())
-    }
-  }, [])
 
   useScrollToBottom(() => {
     appDispatch(queryMoreAlbums())
   }, asyncStatus["queryAlbums"] === "pending" || asyncStatus["queryMoreAlbums"] === "pending")
 
-  function onDelete() {
-    const albumIds = selectedItems.map(item => item.id!)
-    appDispatch(deleteAlbums(albumIds))
-  }
+  useEffect(() => {
+    appDispatch(albumActions.resetSlice())
+    appDispatch(queryAlbums())
+  }, [])
 
   useEffect(() => {
     if (asyncStatus["deleteAlbums"] === "fulfilled") {
@@ -74,18 +68,48 @@ export function Component() {
     }
   }, [asyncStatus["deleteAlbums"]])
 
+  function onDelete() {
+    const albumIds = selectedAlbums.map(item => item.id!)
+    appDispatch(deleteAlbums(albumIds))
+  }
+
   function onRefresh() {
     appDispatch(queryAlbums())
-    setSelectedItems([])
   }
 
   function onSearch() {
     appDispatch(queryAlbums())
-    setSelectedItems([])
+  }
+
+  function onFilterChange(e: NonCancelableCustomEvent<TextFilterProps>) {
+    appDispatch(albumActions.updateSlice({ searchQuery: e.detail.filteringText }))
   }
 
   function onCreate() {
     appDispatch(albumActions.updateSlice({ newAlbumModalOpen: true }))
+  }
+
+  function onEdit() {
+    const selectedAlbum = selectedAlbums[0]
+    const isLocked = selectedAlbum.name!.includes("=")
+    if (isLocked) {
+      appDispatch(mainActions.addNotification({
+        type: "error",
+        content: "This album cannot be edited",
+      }))
+      appDispatch(albumActions.updateSlice({ selectedAlbums: [] }))
+      scrollToTop()
+    } else {
+      appDispatch(albumActions.updateSlice({ renameAlbumModalOpen: true, renameAlbumId: selectedAlbums[0].id, renameAlbumName: selectedAlbums[0].name }))
+    }
+  }
+
+  function onToggleActionsMode() {
+    appDispatch(albumActions.toggleActionsMode())
+  }
+
+  function onSelectionChange(e: NonCancelableCustomEvent<CardsProps.SelectionChangeDetail<Album>>) {
+    appDispatch(albumActions.updateSlice({ selectedAlbums: e.detail.selectedItems, actionsMode: "select" }))
   }
 
   return (
@@ -93,10 +117,8 @@ export function Component() {
       <Cards
         // loading={showLoader && (asyncStatus["queryAlbums"] === "pending" || albums === undefined)}
         loading={asyncStatus["queryAlbums"] === "pending" || albums === undefined}
-        onSelectionChange={({ detail }) =>
-          setSelectedItems(detail?.selectedItems ?? [])
-        }
-        selectedItems={selectedItems}
+        onSelectionChange={onSelectionChange}
+        selectedItems={selectedAlbums}
         ariaLabels={{
           itemSelectionLabel: (e, t) => `select ${t.name}`,
           selectionGroupLabel: "Item selection",
@@ -112,27 +134,25 @@ export function Component() {
                   width: "min-content",
                   whiteSpace: "nowrap",
                 }}
+                className="link"
               >
                 <CloudLink
                   href="#"
                   fontSize="heading-m"
                 >
                   {
-                    item.name!
-                      .replace("uploader=", "")
-                      .replace("website=", "")
-                      .replace("media_type=", "")
+                    item.name!.split("=").pop()!
+                  }
+                  {
+                    item.name!.includes("=") && (
+                      <Icon name="lock-private" size="small"  />
+                    )
                   }
                 </CloudLink>
               </div>
             )
           },
           sections: [
-            // {
-            //   id: "type",
-            //   header: "Type",
-            //   content: item => item.type,
-            // },
             {
               id: "image",
               content: item => (
@@ -151,7 +171,7 @@ export function Component() {
           { cards: 1 },
           { minWidth: 1000, cards: 2 },
         ]}
-        entireCardClickable
+        entireCardClickable={true}
         items={albums || []}
         loadingText="Loading albums"
         selectionType="multi"
@@ -175,7 +195,7 @@ export function Component() {
           <TextFilter
             filteringPlaceholder="Search albums"
             filteringText={searchQuery}
-            onChange={event => appDispatch(albumActions.updateSlice({ searchQuery: event.detail.filteringText }))}
+            onChange={onFilterChange}
             onDelayedChange={onSearch}
           />
         }
@@ -184,32 +204,75 @@ export function Component() {
             variant="awsui-h1-sticky"
             counter={
               albums
-                ? selectedItems?.length
-                  ? `(${selectedItems.length}/${albums.length})`
+                ? selectedAlbums?.length
+                  ? `(${selectedAlbums.length}/${albums.length})`
                   : `(${albums.length})`
                 : ""
             }
             actions={
               <SpaceBetween size="xs" direction="horizontal">
-                <CloudButton
-                  disabled={!isOnlyOneSelected}
-                  iconName="edit"
-                />
-                <CloudButton
-                  disabled={selectedItems.length === 0}
-                  onClick={() => setDeleteModalVisible(true)}
-                  iconName="remove"
-                />
-                <CloudButton
-                  onClick={onRefresh}
-                  iconName="refresh"
-                  disabled={asyncStatus["queryAlbums"] === "pending"}
-                />
-                <CloudButton
-                  variant="primary"
-                  onClick={onCreate}
-                  iconName="add-plus"
-                />
+                {/*{*/}
+                {/*  selectedAlbums.length > 0 && (*/}
+                {/*    <CloudButton*/}
+                {/*      onClick={onClearSelection}*/}
+                {/*    >*/}
+                {/*      Clear selection*/}
+                {/*    </CloudButton>*/}
+                {/*  )*/}
+                {/*}*/}
+                {/*<CloudButton*/}
+                {/*  disabled={!isOnlyOneSelected}*/}
+                {/*  // onClick={(e) => console.log(e)}*/}
+                {/*  onClick={onEdit}*/}
+                {/*  iconName="edit"*/}
+                {/*/>*/}
+                {/*<CloudButton*/}
+                {/*  disabled={selectedAlbums.length === 0}*/}
+                {/*  onClick={() => setDeleteModalVisible(true)}*/}
+                {/*  iconName="remove"*/}
+                {/*/>*/}
+                {
+                  actionsMode === "view" && (
+                    <Fragment>
+                      <CloudButton
+                        onClick={onToggleActionsMode}
+                      >
+                        Select
+                      </CloudButton>
+                      <CloudButton
+                        onClick={onRefresh}
+                        iconName="refresh"
+                        disabled={asyncStatus["queryAlbums"] === "pending"}
+                      />
+                      <CloudButton
+                        variant="primary"
+                        onClick={onCreate}
+                        iconName="add-plus"
+                      />
+                    </Fragment>
+                  )
+                }
+                {
+                  actionsMode === "select" && (
+                    <Fragment>
+                      <CloudButton
+                        onClick={onToggleActionsMode}
+                      >
+                        Cancel
+                      </CloudButton>
+                      <CloudButton
+                        disabled={!isOnlyOneSelected}
+                        onClick={onEdit}
+                        iconName="edit"
+                      />
+                      <CloudButton
+                        disabled={selectedAlbums.length === 0}
+                        onClick={() => setDeleteModalVisible(true)}
+                        iconName="remove"
+                      />
+                    </Fragment>
+                  )
+                }
               </SpaceBetween>
             }
           >
@@ -234,6 +297,7 @@ export function Component() {
         )
       }
       <NewAlbumModal />
+      <RenameAlbumModal />
       <ConfirmModal
         confirmText="Delete"
         title="Delete albums"

@@ -28,4 +28,8 @@ export function getApiErrorMessage(error: any) {
   return e.body?.message || "An unexpected error occurred"
 }
 
+export function scrollToTop() {
+  window.scrollTo(0, 0)
+}
+
 export type AsyncStatus = "pending" | "fulfilled" | "rejected"

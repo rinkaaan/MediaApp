@@ -1,38 +1,38 @@
 import { Alert, Box, Button, FormField, Input, Modal, SpaceBetween } from "@cloudscape-design/components"
 import { useSelector } from "react-redux"
+import { renameAlbum, albumActions, albumSelector, queryAlbums } from "../albumSlice"
 import store, { appDispatch } from "../../../common/store"
 import { FormEvent, useEffect } from "react"
-import { addMedia, mediaActions, mediaSelector } from "../mediaSlice"
 
-export default function NewMediaModal() {
-  const { errorMessages, newMediaUrl, asyncStatus, newMediaModalOpen } = useSelector(mediaSelector)
-  const loading = asyncStatus["addMedia"] === "pending"
+export default function RenameAlbumModal() {
+  const { errorMessages, renameAlbumName, asyncStatus, renameAlbumModalOpen } = useSelector(albumSelector)
+  const loading = asyncStatus["renameAlbum"] === "pending"
 
   useEffect(() => {
-    if (asyncStatus["addMedia"] === "fulfilled") {
-      onClose()
+    if (asyncStatus["renameAlbum"] === "fulfilled") {
+      appDispatch(albumActions.resetSlice())
+      appDispatch(queryAlbums())
     }
-  }, [asyncStatus["addMedia"]])
+  }, [asyncStatus["renameAlbum"]])
 
   function onClose() {
-    appDispatch(mediaActions.clearErrorMessages())
-    appDispatch(mediaActions.resetNewMediaState())
+    appDispatch(albumActions.resetRenameAlbumState())
   }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    await onCreate()
+    await onRename()
   }
 
-  async function onCreate() {
+  async function onRename() {
     if (!validate()) return
-    await appDispatch(addMedia())
+    await appDispatch(renameAlbum())
   }
 
   function validate() {
-    const { newMediaUrl } = store.getState().media
-    if (newMediaUrl.trim().length === 0) {
-      appDispatch(mediaActions.addMissingErrorMessage("newMediaUrl"))
+    const { renameAlbumName } = store.getState().album
+    if (renameAlbumName.trim().length === 0) {
+      appDispatch(albumActions.addMissingErrorMessage("renameAlbumName"))
       return false
     }
     return true
@@ -40,8 +40,8 @@ export default function NewMediaModal() {
 
   return (
     <Modal
-      visible={newMediaModalOpen}
-      header="New Media"
+      visible={renameAlbumModalOpen}
+      header="Rename Album"
       closeAriaLabel="Close modal"
       onDismiss={onClose}
       footer={
@@ -56,10 +56,10 @@ export default function NewMediaModal() {
             </Button>
             <Button
               variant="primary"
-              onClick={onCreate}
+              onClick={onRename}
               loading={loading}
             >
-              Create
+              Rename
             </Button>
           </SpaceBetween>
         </Box>
@@ -72,22 +72,22 @@ export default function NewMediaModal() {
             type="submit"
           />
           <FormField
-            label="Media URL"
-            errorText={errorMessages["newMediaUrl"]}
+            label="Album name"
+            errorText={errorMessages["renameAlbumName"]}
           >
             <Input
-              value={newMediaUrl}
+              value={renameAlbumName}
               placeholder="Enter value"
               onChange={event => {
-                appDispatch(mediaActions.clearErrorMessages())
-                appDispatch(mediaActions.updateSlice({ newMediaUrl: event.detail.value }))
+                appDispatch(albumActions.clearErrorMessages())
+                appDispatch(albumActions.updateSlice({ renameAlbumName: event.detail.value }))
               }}
             />
           </FormField>
         </form>
-        {errorMessages["newMedia"] && (
+        {errorMessages["renameAlbum"] && (
           <Alert type="error">
-            {errorMessages["newMedia"]}
+            {errorMessages["renameAlbum"]}
           </Alert>
         )}
       </SpaceBetween>
