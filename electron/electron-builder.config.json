@@ -1,5 +1,5 @@
 {
-  "appId": "com.nguylinc.photos",
+  "appId": "com.nguylinc.media",
   "directories": {
     "buildResources": "resources"
   },
@@ -22,8 +22,8 @@
     "icon": "assets/appIcon.ico"
   },
   "mac": {
-    "category": "your.app.category.type",
+    "category": "com.nguylinc.media",
     "target": "dmg",
-    "icon": "assets/appIcon.icns"
+    "icon": "assets/MacIcon.icns"
   }
 }

@@ -1,6 +1,6 @@
 import type { CapacitorElectronConfig } from "@capacitor-community/electron"
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from "@capacitor-community/electron"
-import type { MenuItemConstructorOptions } from "electron"
+import { MenuItemConstructorOptions, shell } from "electron"
 import { app, MenuItem } from "electron"
 import electronIsDev from "electron-is-dev"
 import unhandled from "electron-unhandled"
@@ -44,6 +44,14 @@ if (electronIsDev) {
   setupContentSecurityPolicy()
   // Initialize our app, build windows, and load content.
   await myCapacitorApp.init()
+
+  // Allow HTTP URLs to be opened in the default browser.
+  const mainWindow = myCapacitorApp.getMainWindow()
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    console.info("Opening URL: ", url)
+    shell.openExternal(url)
+    return { action: "deny" }
+  })
 })()
 
 // Handle when all of our windows are close (platforms have their own expectations).

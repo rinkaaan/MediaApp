@@ -14,8 +14,8 @@ const router = createHashRouter([
     Component: MainLayout,
     errorElement: <MainLayoutError/>,
     loader: async () => {
-      OpenAPI.BASE = "http://127.0.0.1:34200"
-      // OpenAPI.BASE = "http://65.21.126.28:34201"
+      // OpenAPI.BASE = "http://127.0.0.1:34200"
+      OpenAPI.BASE = "http://65.21.126.28:34201"
       return null
     },
     children: [
