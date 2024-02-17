@@ -1,7 +1,6 @@
 import type { CapacitorElectronConfig } from "@capacitor-community/electron"
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from "@capacitor-community/electron"
-import { MenuItemConstructorOptions, shell } from "electron"
-import { app, MenuItem } from "electron"
+import { app, MenuItem, MenuItemConstructorOptions } from "electron"
 import electronIsDev from "electron-is-dev"
 import unhandled from "electron-unhandled"
 
@@ -12,17 +11,13 @@ unhandled()
 
 // Define our menu templates (these are optional)
 const trayMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [new MenuItem({ label: "Quit App", role: "quit" })]
-const appMenuBarMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [
-  { role: process.platform === "darwin" ? "appMenu" : "fileMenu" },
-  { role: "viewMenu" },
-]
 
 // Get Config options from capacitor.config
 const capacitorFileConfig: CapacitorElectronConfig = getCapacitorElectronConfig()
 
 // Initialize our app. You can pass menu templates into the app here.
 // const myCapacitorApp = new ElectronCapacitorApp(capacitorFileConfig);
-const myCapacitorApp = new ElectronCapacitorApp(capacitorFileConfig, trayMenuTemplate, appMenuBarMenuTemplate)
+const myCapacitorApp = new ElectronCapacitorApp(capacitorFileConfig, trayMenuTemplate)
 
 // If deeplinking is enabled then we will set it up here.
 if (capacitorFileConfig.electron?.deepLinkingEnabled) {
@@ -44,23 +39,11 @@ if (electronIsDev) {
   setupContentSecurityPolicy()
   // Initialize our app, build windows, and load content.
   await myCapacitorApp.init()
-
-  // Allow HTTP URLs to be opened in the default browser.
-  const mainWindow = myCapacitorApp.getMainWindow()
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    console.info("Opening URL: ", url)
-    shell.openExternal(url)
-    return { action: "deny" }
-  })
 })()
 
 // Handle when all of our windows are close (platforms have their own expectations).
 app.on("window-all-closed", function () {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== "darwin") {
-    app.quit()
-  }
+  app.quit()
 })
 
 // When the dock icon is clicked.

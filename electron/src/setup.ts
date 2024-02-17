@@ -1,7 +1,7 @@
 import type { CapacitorElectronConfig } from "@capacitor-community/electron"
 import { CapacitorSplashScreen, CapElectronEventEmitter, setupCapacitorElectronPlugins } from "@capacitor-community/electron"
 import chokidar from "chokidar"
-import type { MenuItemConstructorOptions } from "electron"
+import { MenuItemConstructorOptions, shell } from "electron"
 import { app, BrowserWindow, Menu, MenuItem, nativeImage, session, Tray } from "electron"
 import electronServe from "electron-serve"
 import windowStateKeeper from "electron-window-state"
@@ -46,10 +46,6 @@ export class ElectronCapacitorApp {
   private TrayMenuTemplate: (MenuItem | MenuItemConstructorOptions)[] = [
     new MenuItem({ label: "Quit App", role: "quit" }),
   ]
-  private AppMenuBarMenuTemplate: (MenuItem | MenuItemConstructorOptions)[] = [
-    { role: process.platform === "darwin" ? "appMenu" : "fileMenu" },
-    { role: "viewMenu" },
-  ]
   private mainWindowState
   private loadWebApp
   private customScheme: string
@@ -57,7 +53,6 @@ export class ElectronCapacitorApp {
   constructor(
     capacitorFileConfig: CapacitorElectronConfig,
     trayMenuTemplate?: (MenuItemConstructorOptions | MenuItem)[],
-    appMenuBarMenuTemplate?: (MenuItemConstructorOptions | MenuItem)[]
   ) {
     this.CapacitorFileConfig = capacitorFileConfig
 
@@ -65,10 +60,6 @@ export class ElectronCapacitorApp {
 
     if (trayMenuTemplate) {
       this.TrayMenuTemplate = trayMenuTemplate
-    }
-
-    if (appMenuBarMenuTemplate) {
-      this.AppMenuBarMenuTemplate = appMenuBarMenuTemplate
     }
 
     // Setup our web app loader, this lets us load apps like react, vue, and angular without changing their build chains.
@@ -159,9 +150,6 @@ export class ElectronCapacitorApp {
       this.TrayIcon.setContextMenu(Menu.buildFromTemplate(this.TrayMenuTemplate))
     }
 
-    // Setup the main manu bar at the top of our window.
-    Menu.setApplicationMenu(Menu.buildFromTemplate(this.AppMenuBarMenuTemplate))
-
     // If the splashscreen is enabled, show it first while the main window loads then switch it out for the main window, or just load the main window from the start.
     if (this.CapacitorFileConfig.electron?.splashScreenEnabled) {
       this.SplashScreen = new CapacitorSplashScreen({
@@ -179,12 +167,9 @@ export class ElectronCapacitorApp {
     }
 
     // Security
-    this.MainWindow.webContents.setWindowOpenHandler((details) => {
-      if (!details.url.includes(this.customScheme)) {
-        return { action: "deny" }
-      } else {
-        return { action: "allow" }
-      }
+    this.MainWindow.webContents.setWindowOpenHandler(({ url }) => {
+      shell.openExternal(url)
+      return { action: "deny" }
     })
     this.MainWindow.webContents.on("will-navigate", (event, _newURL) => {
       if (!this.MainWindow.webContents.getURL().includes(this.customScheme)) {
