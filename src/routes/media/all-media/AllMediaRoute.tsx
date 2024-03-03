@@ -1,13 +1,14 @@
-import { Alert, Box, Cards, Header, SpaceBetween } from "@cloudscape-design/components"
+import { Alert, Box, Cards, Header, SpaceBetween, Spinner, TextContent } from "@cloudscape-design/components"
 import { Fragment, useEffect, useState } from "react"
 import { uuid } from "../../../common/typedUtils"
 import CloudButton from "../../../components/CloudButton"
 import { useSelector } from "react-redux"
-import { addMedia, deleteMedias, mediaActions, mediaSelector, queryMedia } from "../mediaSlice"
+import { addMedia, deleteMedias, mediaActions, mediaSelector, queryMedia, queryMoreMedia } from "../mediaSlice"
 import { appDispatch } from "../../../common/store"
 import ConfirmModal from "../../../components/ConfirmModal"
 import BadgeLink from "../../../components/BadgeLink"
 import { mainActions } from "../../mainSlice"
+import useScrollToBottom from "../../../hooks/useScrollToBottom"
 
 // const items: Media[] = [
 //   {
@@ -50,6 +51,10 @@ export function Component() {
   const { asyncStatus, medias, selectedItems } = useSelector(mediaSelector)
   const isOnlyOneSelected = selectedItems.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+
+  useScrollToBottom(() => {
+    appDispatch(queryMoreMedia())
+  }, asyncStatus["queryMedia"] === "pending" || asyncStatus["queryMoreMedia"] === "pending")
 
   useEffect(() => {
     appDispatch(mediaActions.resetSlice())
@@ -224,6 +229,22 @@ export function Component() {
           </Header>
         }
       />
+      {
+        asyncStatus["queryMoreMedia"] === "pending" && (
+            <div style={{ width: "100%", display: "flex", justifyContent: "center", paddingTop: "0.5rem", color: "#5f6b7a" }}>
+              <SpaceBetween
+                size="xs"
+                direction="horizontal"
+                alignItems="center"
+              >
+                <Spinner size="normal" />
+                <TextContent>
+                  <p style={{ color: "#5f6b7a" }}>Loading media</p>
+                </TextContent>
+              </SpaceBetween>
+            </div>
+        )
+      }
       <ConfirmModal
         confirmText="Delete"
         title="Delete media"

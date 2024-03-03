@@ -125,7 +125,23 @@ export const queryMedia = createAsyncThunk(
 //     }
 //   }
 // )
-//
+
+export const queryMoreMedia = createAsyncThunk(
+  "media/queryMoreMedia",
+  async (_payload, { dispatch }) => {
+    const { medias: curMedias, noMoreMedia } = store.getState().media
+    if (noMoreMedia || !curMedias) return
+    const lastId = curMedias[curMedias.length - 1].created_at_ksuid
+    if (!lastId) return
+    const queryMediaOut = await MediaService.getMediaQuery(lastId, 30, true)
+    if (!queryMediaOut.media || queryMediaOut.media?.length === 0) {
+      dispatch(mediaActions.updateSlice({ noMoreMedia: true }))
+    } else {
+      dispatch(mediaActions.updateSlice({ medias: [...curMedias, ...queryMediaOut.media], noMoreMedia: queryMediaOut.no_more_media }))
+    }
+  }
+)
+
 // export const deleteAlbums = createAsyncThunk(
 //   "album/deleteAlbums",
 //   async (albumIds: Array<string>, { dispatch }) => {
