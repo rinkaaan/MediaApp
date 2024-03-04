@@ -90,18 +90,19 @@ export function Component() {
   }
 
   function onEdit() {
-    const selectedAlbum = selectedAlbums[0]
-    const isLocked = selectedAlbum.name!.includes("=")
-    if (isLocked) {
-      appDispatch(mainActions.addNotification({
-        type: "error",
-        content: "This album cannot be edited",
-      }))
-      appDispatch(albumActions.updateSlice({ selectedAlbums: [] }))
-      scrollToTop()
-    } else {
-      appDispatch(albumActions.updateSlice({ renameAlbumModalOpen: true, renameAlbumId: selectedAlbums[0].id, renameAlbumName: selectedAlbums[0].name }))
-    }
+    // const selectedAlbum = selectedAlbums[0]
+    // const isLocked = selectedAlbum.name!.includes("=")
+    // if (isLocked) {
+    //   appDispatch(mainActions.addNotification({
+    //     type: "error",
+    //     content: "This album cannot be edited",
+    //   }))
+    //   appDispatch(albumActions.updateSlice({ selectedAlbums: [] }))
+    //   scrollToTop()
+    // } else {
+    //   appDispatch(albumActions.updateSlice({ renameAlbumModalOpen: true, renameAlbumId: selectedAlbums[0].id, renameAlbumName: selectedAlbums[0].name }))
+    // }
+    appDispatch(albumActions.updateSlice({ renameAlbumModalOpen: true, renameAlbumId: selectedAlbums[0].id, renameAlbumName: selectedAlbums[0].name }))
   }
 
   function onToggleActionsMode() {
@@ -143,11 +144,11 @@ export function Component() {
                   {
                     item.name!.split("=").pop()!
                   }
-                  {
-                    item.name!.includes("=") && (
-                      <Icon name="lock-private" size="small"  />
-                    )
-                  }
+                  {/*{*/}
+                  {/*  item.name!.includes("=") && (*/}
+                  {/*    <Icon name="lock-private" size="small"  />*/}
+                  {/*  )*/}
+                  {/*}*/}
                 </CloudLink>
               </div>
             )
