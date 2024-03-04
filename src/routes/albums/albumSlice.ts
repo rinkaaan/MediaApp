@@ -24,7 +24,6 @@ export interface AlbumState {
   albums: Array<Album> | undefined;
   noMoreAlbums: boolean;
   searchQuery: string;
-  actionsMode: "view" | "select";
   selectedAlbums: Array<Album>;
 }
 
@@ -45,7 +44,6 @@ const initialState: AlbumState = {
   albums: undefined,
   noMoreAlbums: false,
   searchQuery: "",
-  actionsMode: "view",
   selectedAlbums: [],
 }
 
@@ -65,13 +63,6 @@ export const albumSlice = createSlice({
     },
     addErrorMessage: (state, action: PayloadAction<{ key: string, message: string }>) => {
       state.errorMessages[action.payload.key] = action.payload.message
-    },
-    toggleActionsMode: (state) => {
-      const currentMode = state.actionsMode
-      state.actionsMode = currentMode === "view" ? "select" : "view"
-      if (currentMode === "select") {
-        state.selectedAlbums = []
-      }
     },
     resetSlice: () => {
       return initialState

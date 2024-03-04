@@ -9,6 +9,8 @@ import BadgeLink from "../../../components/BadgeLink"
 import { mainActions } from "../../mainSlice"
 import useScrollToBottom from "../../../hooks/useScrollToBottom"
 import CloudButton from "../../../components/CloudButton"
+import useWindowSize from "../../../hooks/useWindowSize"
+import { Breakpoints } from "../../../common/constants"
 
 // const items: Media[] = [
 //   {
@@ -49,6 +51,7 @@ import CloudButton from "../../../components/CloudButton"
 
 export function Component() {
   const { asyncStatus, medias, selectedItems } = useSelector(mediaSelector)
+  const { width } = useWindowSize()
   const isOnlyOneSelected = selectedItems.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
 
@@ -76,7 +79,9 @@ export function Component() {
   }
 
   function onShowDelete() {
-    appDispatch(mainActions.updateSlice({ toolsOpen: false }))
+    if (width <= Breakpoints.xSmall) {
+      appDispatch(mainActions.updateSlice({ toolsOpen: false }))
+    }
     setDeleteModalVisible(true)
   }
 
@@ -86,7 +91,7 @@ export function Component() {
 
   useEffect(() => {
     const tools = (
-      <HelpPanel header={<h2>Actions</h2>}>
+      <HelpPanel header={<h2>Media Actions</h2>}>
         <SpaceBetween size="s" direction="horizontal">
           <CloudButton
             onClick={onRefresh}
@@ -242,30 +247,6 @@ export function Component() {
                   : `(${medias.length})`
                 : ""
             }
-            // actions={
-            //   <SpaceBetween size="xs" direction="horizontal">
-            //     <CloudButton
-            //         disabled={!isOnlyOneSelected}
-            //         iconName="edit"
-            //       />
-            //       <CloudButton
-            //         disabled={selectedItems.length === 0}
-            //         onClick={() => setDeleteModalVisible(true)}
-            //         iconName="remove"
-            //       />
-            //       <CloudButton
-            //         onClick={onRefresh}
-            //         iconName="refresh"
-            //         disabled={asyncStatus["queryAlbums"] === "pending"}
-            //       />
-            //       <CloudButton
-            //         variant="primary"
-            //         onClick={onCreate}
-            //         iconName="add-plus"
-            //         loading={asyncStatus["addMedia"] === "pending"}
-            //       />
-            //   </SpaceBetween>
-            // }
           >
             All Media
           </Header>

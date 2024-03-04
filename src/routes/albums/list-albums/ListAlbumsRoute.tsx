@@ -1,5 +1,5 @@
-import { Alert, Box, Cards, CardsProps, Header, Icon, NonCancelableCustomEvent, SpaceBetween, Spinner, TextContent, TextFilter, TextFilterProps } from "@cloudscape-design/components"
-import { Fragment, useEffect, useState } from "react"
+import { Alert, Box, Cards, CardsProps, Header, HelpPanel, NonCancelableCustomEvent, SpaceBetween, Spinner, TextContent, TextFilter, TextFilterProps } from "@cloudscape-design/components"
+import React, { Fragment, useEffect, useState } from "react"
 import { Album } from "../../../../openapi-client"
 import CloudLink from "../../../components/CloudLink"
 import CloudButton from "../../../components/CloudButton"
@@ -12,7 +12,8 @@ import ConfirmModal from "../../../components/ConfirmModal"
 import RenameAlbumModal from "./RenameAlbumModal"
 import "./style.css"
 import { mainActions } from "../../mainSlice"
-import { scrollToTop } from "../../../common/typedUtils"
+import { Breakpoints } from "../../../common/constants"
+import useWindowSize from "../../../hooks/useWindowSize"
 
 // const items: Album[] = [
 //   {
@@ -48,8 +49,9 @@ import { scrollToTop } from "../../../common/typedUtils"
 // ]
 
 export function Component() {
-  const { asyncStatus, albums, searchQuery, actionsMode, selectedAlbums } = useSelector(albumSelector)
+  const { asyncStatus, albums, searchQuery, selectedAlbums } = useSelector(albumSelector)
   // const showLoader = useDelayedTrue()
+  const { width } = useWindowSize()
   const isOnlyOneSelected = selectedAlbums.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
 
@@ -71,6 +73,13 @@ export function Component() {
   function onDelete() {
     const albumIds = selectedAlbums.map(item => item.id!)
     appDispatch(deleteAlbums(albumIds))
+  }
+
+  function onShowDelete() {
+    if (width <= Breakpoints.xSmall) {
+      appDispatch(mainActions.updateSlice({ toolsOpen: false }))
+    }
+    setDeleteModalVisible(true)
   }
 
   function onRefresh() {
@@ -105,13 +114,47 @@ export function Component() {
     appDispatch(albumActions.updateSlice({ renameAlbumModalOpen: true, renameAlbumId: selectedAlbums[0].id, renameAlbumName: selectedAlbums[0].name }))
   }
 
-  function onToggleActionsMode() {
-    appDispatch(albumActions.toggleActionsMode())
+  function onSelectionChange(e: NonCancelableCustomEvent<CardsProps.SelectionChangeDetail<Album>>) {
+    appDispatch(albumActions.updateSlice({ selectedAlbums: e.detail.selectedItems }))
   }
 
-  function onSelectionChange(e: NonCancelableCustomEvent<CardsProps.SelectionChangeDetail<Album>>) {
-    appDispatch(albumActions.updateSlice({ selectedAlbums: e.detail.selectedItems, actionsMode: "select" }))
-  }
+  useEffect(() => {
+    const tools = (
+      <HelpPanel header={<h2>Album Actions</h2>}>
+        <SpaceBetween size="s" direction="horizontal">
+          <CloudButton
+            onClick={onRefresh}
+            iconName="refresh"
+            disabled={asyncStatus["queryAlbums"] === "pending"}
+          >
+            Refresh
+          </CloudButton>
+          <CloudButton
+            onClick={onCreate}
+            iconName="add-plus"
+            loading={asyncStatus["addAlbum"] === "pending"}
+          >
+            Create album
+          </CloudButton>
+          <CloudButton
+            disabled={selectedAlbums.length === 0}
+            onClick={onShowDelete}
+            iconName="remove"
+          >
+            Delete
+          </CloudButton>
+          <CloudButton
+            disabled={!isOnlyOneSelected}
+            onClick={onEdit}
+            iconName="edit"
+          >
+            Edit
+          </CloudButton>
+        </SpaceBetween>
+      </HelpPanel>
+    )
+    appDispatch(mainActions.updateSlice({ tools }))
+  }, [asyncStatus["queryAlbums"], asyncStatus["addAlbum"], selectedAlbums])
 
   return (
     <Fragment>
@@ -210,72 +253,6 @@ export function Component() {
                   : `(${albums.length})`
                 : ""
             }
-            actions={
-              <SpaceBetween size="xs" direction="horizontal">
-                {/*{*/}
-                {/*  selectedAlbums.length > 0 && (*/}
-                {/*    <CloudButton*/}
-                {/*      onClick={onClearSelection}*/}
-                {/*    >*/}
-                {/*      Clear selection*/}
-                {/*    </CloudButton>*/}
-                {/*  )*/}
-                {/*}*/}
-                {/*<CloudButton*/}
-                {/*  disabled={!isOnlyOneSelected}*/}
-                {/*  // onClick={(e) => console.log(e)}*/}
-                {/*  onClick={onEdit}*/}
-                {/*  iconName="edit"*/}
-                {/*/>*/}
-                {/*<CloudButton*/}
-                {/*  disabled={selectedAlbums.length === 0}*/}
-                {/*  onClick={() => setDeleteModalVisible(true)}*/}
-                {/*  iconName="remove"*/}
-                {/*/>*/}
-                {
-                  actionsMode === "view" && (
-                    <Fragment>
-                      <CloudButton
-                        onClick={onToggleActionsMode}
-                      >
-                        Select
-                      </CloudButton>
-                      <CloudButton
-                        onClick={onRefresh}
-                        iconName="refresh"
-                        disabled={asyncStatus["queryAlbums"] === "pending"}
-                      />
-                      <CloudButton
-                        variant="primary"
-                        onClick={onCreate}
-                        iconName="add-plus"
-                      />
-                    </Fragment>
-                  )
-                }
-                {
-                  actionsMode === "select" && (
-                    <Fragment>
-                      <CloudButton
-                        onClick={onToggleActionsMode}
-                      >
-                        Cancel
-                      </CloudButton>
-                      <CloudButton
-                        disabled={!isOnlyOneSelected}
-                        onClick={onEdit}
-                        iconName="edit"
-                      />
-                      <CloudButton
-                        disabled={selectedAlbums.length === 0}
-                        onClick={() => setDeleteModalVisible(true)}
-                        iconName="remove"
-                      />
-                    </Fragment>
-                  )
-                }
-              </SpaceBetween>
-            }
           >
             Albums
           </Header>
@@ -308,7 +285,7 @@ export function Component() {
         loading={asyncStatus["deleteAlbums"] === "pending"}
       >
         <Alert type="warning" statusIconAriaLabel="Warning">
-          Are you sure you want to delete the selected albums?
+          Are you sure you want to delete the {selectedAlbums.length} selected albums?
         </Alert>
       </ConfirmModal>
     </Fragment>
