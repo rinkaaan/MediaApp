@@ -24,7 +24,7 @@ export default function MainLayoutError() {
         }),
       )
     }
-    navigate("/#/media", { replace: true })
+    navigate("/media", { replace: true })
   }, [error])
 
   return null

@@ -1,7 +1,6 @@
-import { Alert, Box, Cards, Header, SpaceBetween, Spinner, TextContent } from "@cloudscape-design/components"
-import { Fragment, useEffect, useState } from "react"
+import { Alert, Box, Cards, Header, HelpPanel, SpaceBetween, Spinner, TextContent } from "@cloudscape-design/components"
+import React, { Fragment, useEffect, useState } from "react"
 import { uuid } from "../../../common/typedUtils"
-import CloudButton from "../../../components/CloudButton"
 import { useSelector } from "react-redux"
 import { addMedia, deleteMedias, mediaActions, mediaSelector, queryMedia, queryMoreMedia } from "../mediaSlice"
 import { appDispatch } from "../../../common/store"
@@ -9,6 +8,7 @@ import ConfirmModal from "../../../components/ConfirmModal"
 import BadgeLink from "../../../components/BadgeLink"
 import { mainActions } from "../../mainSlice"
 import useScrollToBottom from "../../../hooks/useScrollToBottom"
+import CloudButton from "../../../components/CloudButton"
 
 // const items: Media[] = [
 //   {
@@ -52,21 +52,6 @@ export function Component() {
   const isOnlyOneSelected = selectedItems.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
 
-  useScrollToBottom(() => {
-    appDispatch(queryMoreMedia())
-  }, asyncStatus["queryMedia"] === "pending" || asyncStatus["queryMoreMedia"] === "pending")
-
-  useEffect(() => {
-    appDispatch(mediaActions.resetSlice())
-    appDispatch(queryMedia())
-  }, [])
-
-  useEffect(() => {
-    if (asyncStatus["deleteMedias"] === "fulfilled") {
-      setDeleteModalVisible(false)
-    }
-  }, [asyncStatus["deleteMedias"]])
-
   function onRefresh() {
     appDispatch(queryMedia())
   }
@@ -89,6 +74,63 @@ export function Component() {
     const mediaIds = selectedItems.map((media) => media.id!)
     appDispatch(deleteMedias(mediaIds))
   }
+
+  function onShowDelete() {
+    appDispatch(mainActions.updateSlice({ toolsOpen: false }))
+    setDeleteModalVisible(true)
+  }
+
+  useScrollToBottom(() => {
+    appDispatch(queryMoreMedia())
+  }, asyncStatus["queryMedia"] === "pending" || asyncStatus["queryMoreMedia"] === "pending")
+
+  useEffect(() => {
+    const tools = (
+      <HelpPanel header={<h2>Actions</h2>}>
+        <SpaceBetween size="s" direction="horizontal">
+          <CloudButton
+            onClick={onRefresh}
+            iconName="refresh"
+            disabled={asyncStatus["queryMedia"] === "pending"}
+          >
+            Refresh
+          </CloudButton>
+          <CloudButton
+            onClick={onCreate}
+            iconName="add-plus"
+            loading={asyncStatus["addMedia"] === "pending"}
+          >
+            Add media
+          </CloudButton>
+          <CloudButton
+            disabled={selectedItems.length === 0}
+            onClick={onShowDelete}
+            iconName="remove"
+          >
+            Delete
+          </CloudButton>
+          <CloudButton
+            disabled={!isOnlyOneSelected}
+            iconName="edit"
+          >
+            Edit
+          </CloudButton>
+        </SpaceBetween>
+      </HelpPanel>
+    )
+    appDispatch(mainActions.updateSlice({ tools }))
+  }, [asyncStatus["queryMedia"], asyncStatus["addMedia"], selectedItems])
+
+  useEffect(() => {
+    appDispatch(mediaActions.resetSlice())
+    appDispatch(queryMedia())
+  }, [])
+
+  useEffect(() => {
+    if (asyncStatus["deleteMedias"] === "fulfilled") {
+      setDeleteModalVisible(false)
+    }
+  }, [asyncStatus["deleteMedias"]])
 
   return (
     <Fragment>
@@ -200,30 +242,30 @@ export function Component() {
                   : `(${medias.length})`
                 : ""
             }
-            actions={
-              <SpaceBetween size="xs" direction="horizontal">
-                <CloudButton
-                    disabled={!isOnlyOneSelected}
-                    iconName="edit"
-                  />
-                  <CloudButton
-                    disabled={selectedItems.length === 0}
-                    onClick={() => setDeleteModalVisible(true)}
-                    iconName="remove"
-                  />
-                  <CloudButton
-                    onClick={onRefresh}
-                    iconName="refresh"
-                    disabled={asyncStatus["queryAlbums"] === "pending"}
-                  />
-                  <CloudButton
-                    variant="primary"
-                    onClick={onCreate}
-                    iconName="add-plus"
-                    loading={asyncStatus["addMedia"] === "pending"}
-                  />
-              </SpaceBetween>
-            }
+            // actions={
+            //   <SpaceBetween size="xs" direction="horizontal">
+            //     <CloudButton
+            //         disabled={!isOnlyOneSelected}
+            //         iconName="edit"
+            //       />
+            //       <CloudButton
+            //         disabled={selectedItems.length === 0}
+            //         onClick={() => setDeleteModalVisible(true)}
+            //         iconName="remove"
+            //       />
+            //       <CloudButton
+            //         onClick={onRefresh}
+            //         iconName="refresh"
+            //         disabled={asyncStatus["queryAlbums"] === "pending"}
+            //       />
+            //       <CloudButton
+            //         variant="primary"
+            //         onClick={onCreate}
+            //         iconName="add-plus"
+            //         loading={asyncStatus["addMedia"] === "pending"}
+            //       />
+            //   </SpaceBetween>
+            // }
           >
             All Media
           </Header>
@@ -254,7 +296,7 @@ export function Component() {
         loading={asyncStatus["deleteMedias"] === "pending"}
       >
         <Alert type="warning" statusIconAriaLabel="Warning">
-          Are you sure you want to delete the selected media?
+          Are you sure you want to delete the {selectedItems.length} selected media?
         </Alert>
       </ConfirmModal>
     </Fragment>

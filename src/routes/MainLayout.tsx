@@ -1,6 +1,6 @@
 import { Alert, AppLayout, Box, Button, Flashbar, Modal, SideNavigation, SideNavigationProps, SpaceBetween } from "@cloudscape-design/components"
 import { Navigate, Outlet, ScrollRestoration, UIMatch, useLocation, useMatches, useNavigate } from "react-router-dom"
-import { Fragment, useEffect, useState } from "react"
+import React, { Fragment, useEffect, useState } from "react"
 import CloudBreadcrumbGroup from "../components/CloudBreadcrumbGroup"
 import { useSelector } from "react-redux"
 import { appDispatch } from "../common/store"
@@ -8,6 +8,8 @@ import { mainActions, mainSelector } from "./mainSlice"
 import { CrumbHandle } from "../App"
 
 import { prepareNotifications } from "../common/storeUtils"
+import useWindowSize from "../hooks/useWindowSize"
+import { Breakpoints } from "../common/constants"
 
 const items: SideNavigationProps.Item[] = [
   {
@@ -55,12 +57,16 @@ export default function MainLayout() {
   const navigate = useNavigate()
   const matches = useMatches() as UIMatch<string, CrumbHandle>[]
   const crumbs = getCrumbs(matches)
+  const { width } = useWindowSize()
   const [activeHref, setActiveHref] = useState<string | undefined>(undefined)
-  const { navigationOpen, notifications, dirty, dirtyModalVisible, dirtyRedirectUrl, startingPath } = useSelector(mainSelector)
+  const { navigationOpen, toolsOpen, tools, notifications, dirty, dirtyModalVisible, dirtyRedirectUrl, startingPath } = useSelector(mainSelector)
 
   useEffect(() => {
     if (startingPath) {
       navigate(startingPath)
+    }
+    if (width > Breakpoints.medium) {
+      appDispatch(mainActions.updateSlice({ toolsOpen: true }))
     }
   }, [])
 
@@ -105,12 +111,16 @@ export default function MainLayout() {
           onNavigationChange={(e) => {
             appDispatch(mainActions.updateSlice({ navigationOpen: e.detail.open }))
           }}
+          toolsOpen={toolsOpen}
+          onToolsChange={(e) => {
+            appDispatch(mainActions.updateSlice({ toolsOpen: e.detail.open }))
+          }}
+          tools={tools}
           content={<Outlet/>}
           breadcrumbs={<BreadCrumbs/>}
           notifications={
             <Flashbar items={prepareNotifications(notifications)}/>
           }
-          toolsHide
         />
         <Modal
           visible={dirtyModalVisible}

@@ -2,9 +2,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { FlashbarProps } from "@cloudscape-design/components"
 import { uuid } from "../common/typedUtils"
 import type { RootState } from "../common/reducers"
+import React from "react"
 
 export interface MainState {
   navigationOpen: boolean;
+  toolsOpen?: boolean;
+  tools: React.ReactNode;
   notifications: Array<FlashbarProps.MessageDefinition>;
   dirty: boolean;
   dirtyModalVisible: boolean;
@@ -15,6 +18,8 @@ export interface MainState {
 
 const initialState: MainState = {
   navigationOpen: false,
+  toolsOpen: false,
+  tools: null,
   notifications: [],
   dirty: false,
   dirtyModalVisible: false,

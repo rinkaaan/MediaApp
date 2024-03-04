@@ -1,4 +1,4 @@
-import { createHashRouter, Navigate, Outlet, RouterProvider } from "react-router-dom"
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom"
 import MainLayout from "./routes/MainLayout"
 import MainLayoutError from "./routes/MainLayoutError"
 import { mainSelector } from "./routes/mainSlice"
@@ -8,7 +8,7 @@ import "./app.css"
 import { Fragment } from "react"
 import { OpenAPI } from "../openapi-client"
 
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: "/",
     Component: MainLayout,
