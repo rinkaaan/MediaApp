@@ -1,7 +1,7 @@
 import { CapacitorConfig } from "@capacitor/cli"
 
 const config: CapacitorConfig = {
-  appId: "com.nguylinc.photos",
+  appId: "com.nguylinc.media",
   appName: "Media",
   webDir: "dist",
   server: {
