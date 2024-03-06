@@ -6,7 +6,7 @@ import { addMedia, deleteMedias, mediaActions, mediaSelector, queryMedia, queryM
 import { appDispatch } from "../../../common/store"
 import ConfirmModal from "../../../components/ConfirmModal"
 import BadgeLink from "../../../components/BadgeLink"
-import { mainActions } from "../../mainSlice"
+import { mainActions, mainSelector } from "../../mainSlice"
 import useScrollToBottom from "../../../hooks/useScrollToBottom"
 import CloudButton from "../../../components/CloudButton"
 import useWindowSize from "../../../hooks/useWindowSize"
@@ -50,6 +50,7 @@ import { Breakpoints } from "../../../common/constants"
 // ]
 
 export function Component() {
+  const { toolsOpen } = useSelector(mainSelector)
   const { asyncStatus, medias, selectedItems } = useSelector(mediaSelector)
   const { width } = useWindowSize()
   const isOnlyOneSelected = selectedItems.length === 1
@@ -246,6 +247,26 @@ export function Component() {
                   ? `(${selectedItems.length}/${medias.length})`
                   : `(${medias.length})`
                 : ""
+            }
+            actions={
+              !toolsOpen && (
+                <SpaceBetween
+                  size="xs"
+                  direction="horizontal"
+                >
+                  <CloudButton
+                    onClick={onRefresh}
+                    iconName="refresh"
+                    disabled={asyncStatus["queryMedia"] === "pending"}
+                  />
+                  <CloudButton
+                    variant="primary"
+                    onClick={onCreate}
+                    iconName="add-plus"
+                    loading={asyncStatus["addMedia"] === "pending"}
+                  />
+                </SpaceBetween>
+              )
             }
           >
             All Media
