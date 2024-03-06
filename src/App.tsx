@@ -7,6 +7,7 @@ import "@cloudscape-design/global-styles/index.css"
 import "./app.css"
 import { Fragment } from "react"
 import { OpenAPI } from "../openapi-client"
+import Cookies from "js-cookie"
 
 const router = createBrowserRouter([
   {
@@ -15,7 +16,10 @@ const router = createBrowserRouter([
     errorElement: <MainLayoutError/>,
     loader: async () => {
       // OpenAPI.BASE = "http://127.0.0.1:34200"
-      OpenAPI.BASE = "http://65.21.126.28:34201"
+      // OpenAPI.BASE = "http://65.21.126.28:34201"
+      OpenAPI.BASE = "https://media-api.lincolnnguyen.me"
+      OpenAPI.USERNAME = Cookies.get("username") || ""
+      OpenAPI.PASSWORD = Cookies.get("password") || ""
       return null
     },
     children: [

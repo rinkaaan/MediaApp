@@ -24,7 +24,8 @@
     "open:electron": "cap open @capacitor-community/electron",
     "sync:electron": "ionic cap sync @capacitor-community/electron",
     "open:dist": "open ./dist",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "restart": "npm run build && npx vite preview --host"
   },
   "dependencies": {
     "@capacitor-community/electron": "^5.0.1",
@@ -37,6 +38,8 @@
     "@cloudscape-design/components": "^3.0.558",
     "@cloudscape-design/global-styles": "^1.0.23",
     "@reduxjs/toolkit": "^2.0.1",
+    "@types/js-cookie": "^3.0.6",
+    "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
