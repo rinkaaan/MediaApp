@@ -153,8 +153,14 @@ export function Component() {
         </SpaceBetween>
       </HelpPanel>
     )
-    appDispatch(mainActions.updateSlice({ tools }))
+    appDispatch(mainActions.updateSlice({ tools, toolsHidden: false }))
   }, [asyncStatus["queryAlbums"], asyncStatus["addAlbum"], selectedAlbums])
+
+  useEffect(() => {
+    return () => {
+      appDispatch(mainActions.updateSlice({ toolsHidden: true }))
+    }
+  }, [])
 
   return (
     <Fragment>

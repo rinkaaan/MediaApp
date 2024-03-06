@@ -4,7 +4,7 @@ import React, { Fragment, useEffect, useState } from "react"
 import CloudBreadcrumbGroup from "../components/CloudBreadcrumbGroup"
 import { useSelector } from "react-redux"
 import { appDispatch } from "../common/store"
-import { mainActions, mainSelector } from "./mainSlice"
+import { mainActions, mainSelector, ping } from "./mainSlice"
 import { CrumbHandle } from "../App"
 
 import { prepareNotifications } from "../common/storeUtils"
@@ -59,9 +59,18 @@ export default function MainLayout() {
   const crumbs = getCrumbs(matches)
   const { width } = useWindowSize()
   const [activeHref, setActiveHref] = useState<string | undefined>(undefined)
-  const { navigationOpen, toolsOpen, tools, notifications, dirty, dirtyModalVisible, dirtyRedirectUrl, startingPath } = useSelector(mainSelector)
+  const { navigationOpen, toolsOpen, tools, toolsHidden, notifications, dirty, dirtyModalVisible, dirtyRedirectUrl, startingPath, isAuthenticated } = useSelector(mainSelector)
 
   useEffect(() => {
+    if (isAuthenticated === false && location.pathname !== "/settings") {
+      setTimeout(() => {
+        navigate("/settings")
+      }, 500)
+    }
+  }, [isAuthenticated, location.pathname])
+
+  useEffect(() => {
+    appDispatch(ping())
     if (startingPath) {
       navigate(startingPath)
     }
@@ -116,6 +125,7 @@ export default function MainLayout() {
             appDispatch(mainActions.updateSlice({ toolsOpen: e.detail.open }))
           }}
           tools={tools}
+          toolsHide={toolsHidden}
           content={<Outlet/>}
           breadcrumbs={<BreadCrumbs/>}
           notifications={

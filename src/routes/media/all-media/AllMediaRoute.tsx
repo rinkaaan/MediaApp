@@ -124,12 +124,17 @@ export function Component() {
         </SpaceBetween>
       </HelpPanel>
     )
-    appDispatch(mainActions.updateSlice({ tools }))
+    appDispatch(mainActions.updateSlice({ tools, toolsHidden: false }))
   }, [asyncStatus["queryMedia"], asyncStatus["addMedia"], selectedItems])
 
   useEffect(() => {
     appDispatch(mediaActions.resetSlice())
     appDispatch(queryMedia())
+
+    return () => {
+      appDispatch(mainActions.updateSlice({ toolsHidden: true }))
+      appDispatch(mediaActions.resetSlice())
+    }
   }, [])
 
   useEffect(() => {

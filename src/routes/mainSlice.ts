@@ -1,12 +1,15 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected, PayloadAction } from "@reduxjs/toolkit"
 import { FlashbarProps } from "@cloudscape-design/components"
-import { uuid } from "../common/typedUtils"
+import { AsyncStatus, uuid } from "../common/typedUtils"
 import type { RootState } from "../common/reducers"
 import React from "react"
+import { DefaultService } from "../../openapi-client"
+import { getActionName } from "../common/utils"
 
 export interface MainState {
   navigationOpen: boolean;
   toolsOpen?: boolean;
+  toolsHidden: boolean;
   tools: React.ReactNode;
   notifications: Array<FlashbarProps.MessageDefinition>;
   dirty: boolean;
@@ -16,11 +19,14 @@ export interface MainState {
   startingPath?: string;
   username: string;
   password: string;
+  isAuthenticated?: boolean;
+  asyncStatus: Record<string, AsyncStatus>;
 }
 
 const initialState: MainState = {
   navigationOpen: false,
   toolsOpen: false,
+  toolsHidden: true,
   tools: null,
   notifications: [],
   dirty: false,
@@ -30,6 +36,7 @@ const initialState: MainState = {
   startingPath: undefined,
   username: "",
   password: "",
+  asyncStatus: {},
 }
 
 type Notification = Pick<FlashbarProps.MessageDefinition, "type" | "content">
@@ -61,9 +68,34 @@ export const mainSlice = createSlice({
     },
     resetSlice: () => {
       return initialState
-    }
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addMatcher(isPending, (state, action) => {
+        state.asyncStatus[getActionName(action)] = "pending"
+      })
+      .addMatcher(isRejected, (state, action) => {
+        state.asyncStatus[getActionName(action)] = "rejected"
+      })
+      .addMatcher(isFulfilled, (state, action) => {
+        state.asyncStatus[getActionName(action)] = "fulfilled"
+      })
   },
 })
+
+export const ping = createAsyncThunk(
+  "main/ping",
+  async (_payload, { dispatch }) => {
+    try {
+      await DefaultService.getPing()
+      dispatch(mainSlice.actions.updateSlice({ isAuthenticated: true }))
+    } catch (e) {
+      dispatch(mainSlice.actions.updateSlice({ isAuthenticated: false }))
+      throw e
+    }
+  },
+)
 
 export const mainReducer = mainSlice.reducer
 export const mainActions = mainSlice.actions
