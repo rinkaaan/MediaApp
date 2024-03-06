@@ -5,7 +5,6 @@ import { getActionName } from "../../common/utils"
 import { AsyncStatus, getApiErrorMessage, sleep } from "../../common/typedUtils"
 import store, { appDispatch } from "../../common/store"
 import { mainActions } from "../mainSlice"
-import _ from "lodash"
 
 
 export interface MediaState {
@@ -82,14 +81,8 @@ export const addMedia = createAsyncThunk(
   async (_payload, { dispatch }) => {
     const { newMediaUrl } = store.getState().media
     try {
-      const { website } = await MediaService.postMedia({ media_url: newMediaUrl })
+      await MediaService.postMedia({ media_url: newMediaUrl })
       await appDispatch(queryMedia())
-      dispatch(
-        mainActions.addNotification({
-          content: `${_.capitalize(website)} media added`,
-          type: "success",
-        }),
-      )
     } catch (e) {
       dispatch(
         mainActions.addNotification({
@@ -164,7 +157,7 @@ export const deleteMedias = createAsyncThunk(
     await MediaService.deleteMedia({ media_ids: mediaIds })
     dispatch(
       mainActions.addNotification({
-        content: "Media deleted",
+        content: "Media(s) deleted",
         type: "success",
       }),
     )
