@@ -12,8 +12,8 @@ export function Component() {
 
   function saveCredentials() {
     appDispatch(mainActions.updateSlice({ username, password }))
-    Cookies.set("username", username)
-    Cookies.set("password", password)
+    Cookies.set("username", username, { expires: 365 })
+    Cookies.set("password", password, { expires: 365 })
     OpenAPI.USERNAME = username
     OpenAPI.PASSWORD = password
     setSaved(true)
