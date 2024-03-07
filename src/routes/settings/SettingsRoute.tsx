@@ -27,8 +27,12 @@ export function Component() {
   function logout() {
     Cookies.remove("username")
     Cookies.remove("password")
-    appDispatch(mainActions.resetSlice())
-    appDispatch(mainActions.updateSlice({ isAuthenticated: false }))
+    appDispatch(mainActions.updateSlice({ isAuthenticated: false, username: "", password: "", asyncStatus: { ping: "rejected" } }))
+    OpenAPI.USERNAME = ""
+    OpenAPI.PASSWORD = ""
+    setLoginAttempted(false)
+    setUsername("")
+    setPassword("")
   }
 
   useEffect(() => {
@@ -102,7 +106,7 @@ export function Component() {
           </Container>
           {asyncStatus["ping"] === "rejected" && loginAttempted && UnauthorizedAlert}
           {asyncStatus["ping"] === "fulfilled" && AuthorizedAlert}
-          {asyncStatus["ping"] === "pending" && AuthorizingAlert}
+          {asyncStatus["ping"] === "pending" && loginAttempted && AuthorizingAlert}
         </SpaceBetween>
       </Form>
     </ContentLayout>
