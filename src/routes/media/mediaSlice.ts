@@ -21,6 +21,7 @@ export interface MediaState {
   noMoreMedia: boolean;
   selectedItems: Array<Media>;
   listMode: "edit" | "view";
+  listFirstLoad: boolean;
 }
 
 const initialState: MediaState = {
@@ -37,6 +38,7 @@ const initialState: MediaState = {
   noMoreMedia: false,
   selectedItems: [],
   listMode: "view",
+  listFirstLoad: true,
 }
 
 export const mediaSlice = createSlice({
@@ -113,6 +115,7 @@ export const queryMedia = createAsyncThunk(
     const queryMediaOut = await MediaService.getMediaQuery(undefined, 30, true)
     dispatch(mediaActions.updateSlice({ medias: queryMediaOut.media, noMoreMedia: queryMediaOut.no_more_media, selectedItems: [] }))
     await sleep(100)
+    dispatch(mediaActions.updateSlice({ listFirstLoad: false }))
   }
 )
 

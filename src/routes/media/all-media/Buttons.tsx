@@ -51,7 +51,7 @@ export function AddMediaButton() {
 
 export function RefreshButton() {
   const { toolsOpen } = useSelector(mainSelector)
-  const { asyncStatus } = useSelector(mediaSelector)
+  const { asyncStatus, listFirstLoad } = useSelector(mediaSelector)
   const { width } = useWindowSize()
 
   function onRefresh() {
@@ -71,7 +71,7 @@ export function RefreshButton() {
     <CloudButton
       onClick={onRefresh}
       iconName="refresh"
-      loading={asyncStatus["queryMedia"] === "pending"}
+      loading={asyncStatus["queryMedia"] === "pending" && !listFirstLoad}
     >
       {buttonText}
     </CloudButton>
