@@ -1,5 +1,5 @@
-import { Alert, Box, Cards, Header, HelpPanel, SpaceBetween, Spinner, TextContent } from "@cloudscape-design/components"
-import React, { Fragment, useEffect, useState } from "react"
+import { Alert, Box, Cards, Header, SpaceBetween, Spinner, TextContent } from "@cloudscape-design/components"
+import React, { Fragment, useEffect } from "react"
 import { uuid } from "../../../common/typedUtils"
 import { useSelector } from "react-redux"
 import { deleteMedias, mediaActions, mediaSelector, queryMedia, queryMoreMedia } from "../mediaSlice"
@@ -8,11 +8,9 @@ import ConfirmModal from "../../../components/ConfirmModal"
 import BadgeLink from "../../../components/BadgeLink"
 import { mainActions, mainSelector } from "../../mainSlice"
 import useScrollToBottom from "../../../hooks/useScrollToBottom"
-import CloudButton from "../../../components/CloudButton"
-import useWindowSize from "../../../hooks/useWindowSize"
-import { Breakpoints } from "../../../common/constants"
 import "./style.css"
-import { AddMediaButton, RefreshButton } from "./Buttons"
+import { AddMediaButton, DeleteMediaButton, EditMediaButton, ListModeButton, RefreshButton } from "./Buttons"
+import Tools from "./Tools"
 
 // const items: Media[] = [
 //   {
@@ -53,22 +51,11 @@ import { AddMediaButton, RefreshButton } from "./Buttons"
 
 export function Component() {
   const { toolsOpen } = useSelector(mainSelector)
-  const { asyncStatus, medias, selectedItems } = useSelector(mediaSelector)
-  const { width } = useWindowSize()
-  const isOnlyOneSelected = selectedItems.length === 1
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
+  const { asyncStatus, medias, selectedItems, listMode, deleteMediaModalVisible } = useSelector(mediaSelector)
 
   function onDelete() {
     const mediaIds = selectedItems.map((media) => media.id!)
     appDispatch(deleteMedias(mediaIds))
-  }
-
-  function onShowDelete() {
-    if (width <= Breakpoints.xSmall) {
-      appDispatch(mainActions.updateSlice({ toolsOpen: false }))
-    }
-    setDeleteModalVisible(true)
   }
 
   useScrollToBottom(() => {
@@ -76,29 +63,11 @@ export function Component() {
   }, asyncStatus["queryMedia"] === "pending" || asyncStatus["queryMoreMedia"] === "pending")
 
   useEffect(() => {
-    const tools = (
-      <HelpPanel header={<h2>Media Actions</h2>}>
-        <SpaceBetween size="s" direction="horizontal">
-          <RefreshButton />
-          <AddMediaButton />
-          <CloudButton
-            disabled={selectedItems.length === 0}
-            onClick={onShowDelete}
-            iconName="remove"
-          >
-            Delete
-          </CloudButton>
-          <CloudButton
-            disabled={!isOnlyOneSelected}
-            iconName="edit"
-          >
-            Edit
-          </CloudButton>
-        </SpaceBetween>
-      </HelpPanel>
-    )
-    appDispatch(mainActions.updateSlice({ tools, toolsHidden: false }))
-  }, [asyncStatus["queryMedia"], asyncStatus["addMedia"], selectedItems])
+    appDispatch(mainActions.updateSlice({ tools: <Tools />, toolsHidden: false }))
+    return () => {
+      appDispatch(mainActions.updateSlice({ toolsHidden: true }))
+    }
+  }, [])
 
   useEffect(() => {
     appDispatch(mediaActions.resetSlice())
@@ -112,7 +81,7 @@ export function Component() {
 
   useEffect(() => {
     if (asyncStatus["deleteMedias"] === "fulfilled") {
-      setDeleteModalVisible(false)
+      appDispatch(mediaActions.updateSlice({ deleteMediaModalVisible: false }))
     }
   }, [asyncStatus["deleteMedias"]])
 
@@ -199,7 +168,7 @@ export function Component() {
         entireCardClickable
         items={medias || []}
         loadingText="Loading media"
-        // selectionType="multi"
+        selectionType={listMode === "select" ? "multi" : undefined}
         trackBy="id"
         variant="full-page"
         visibleSections={["albums", "image"]}
@@ -231,12 +200,23 @@ export function Component() {
                   size="xs"
                   direction="horizontal"
                 >
-                  <CloudButton
-                    onClick={() => {}}
-                    iconName="edit"
-                  />
-                  <RefreshButton />
-                  <AddMediaButton />
+                  {
+                    listMode === "select" && (
+                      <Fragment>
+                        <DeleteMediaButton />
+                        <EditMediaButton />
+                      </Fragment>
+                    )
+                  }
+                  <ListModeButton />
+                  {
+                    listMode === "view" && (
+                      <Fragment>
+                        <RefreshButton />
+                        <AddMediaButton />
+                      </Fragment>
+                    )
+                  }
                 </SpaceBetween>
               )
             }
@@ -265,8 +245,8 @@ export function Component() {
         confirmText="Delete"
         title="Delete media"
         onConfirm={onDelete}
-        visible={deleteModalVisible}
-        onClose={() => setDeleteModalVisible(false)}
+        visible={deleteMediaModalVisible}
+        onClose={() => appDispatch(mediaActions.updateSlice({ deleteMediaModalVisible: false }))}
         loading={asyncStatus["deleteMedias"] === "pending"}
       >
         <Alert type="warning" statusIconAriaLabel="Warning">

@@ -8,8 +8,6 @@ import { mainActions, mainSelector, ping } from "./mainSlice"
 import { CrumbHandle } from "../App"
 
 import { prepareNotifications } from "../common/storeUtils"
-import useWindowSize from "../hooks/useWindowSize"
-import { Breakpoints } from "../common/constants"
 
 const items: SideNavigationProps.Item[] = [
   {
@@ -57,7 +55,6 @@ export default function MainLayout() {
   const navigate = useNavigate()
   const matches = useMatches() as UIMatch<string, CrumbHandle>[]
   const crumbs = getCrumbs(matches)
-  const { width } = useWindowSize()
   const [activeHref, setActiveHref] = useState<string | undefined>(undefined)
   const { navigationOpen, toolsOpen, tools, toolsHidden, notifications, dirty, dirtyModalVisible, dirtyRedirectUrl, startingPath, isAuthenticated } = useSelector(mainSelector)
 
@@ -73,9 +70,6 @@ export default function MainLayout() {
     appDispatch(ping())
     if (startingPath) {
       navigate(startingPath)
-    }
-    if (width > Breakpoints.medium) {
-      appDispatch(mainActions.updateSlice({ toolsOpen: true }))
     }
   }, [])
 

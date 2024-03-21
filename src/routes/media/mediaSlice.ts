@@ -20,8 +20,9 @@ export interface MediaState {
   medias: Array<Media> | undefined;
   noMoreMedia: boolean;
   selectedItems: Array<Media>;
-  listMode: "edit" | "view";
+  listMode: "select" | "view";
   listFirstLoad: boolean;
+  deleteMediaModalVisible: boolean;
 }
 
 const initialState: MediaState = {
@@ -39,6 +40,7 @@ const initialState: MediaState = {
   selectedItems: [],
   listMode: "view",
   listFirstLoad: true,
+  deleteMediaModalVisible: false,
 }
 
 export const mediaSlice = createSlice({
@@ -66,6 +68,10 @@ export const mediaSlice = createSlice({
       keysToReset.forEach(key => {
         state[key] = initialState[key]
       })
+    },
+    toggleListMode: (state) => {
+      state.selectedItems = []
+      state.listMode = state.listMode === "view" ? "select" : "view"
     }
   },
   extraReducers: (builder) => {
