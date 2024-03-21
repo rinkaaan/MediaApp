@@ -13,7 +13,8 @@ export interface MediaState {
 
   // new media modal
   newMediaModalOpen: boolean;
-  newMediaUrl: string;
+  newMediaUrls: Array<string>;
+  downloadingMediaCount: number;
 
   // list media route
   medias: Array<Media> | undefined;
@@ -27,7 +28,8 @@ const initialState: MediaState = {
 
   // new media modal
   newMediaModalOpen: false,
-  newMediaUrl: "",
+  newMediaUrls: [],
+  downloadingMediaCount: 0,
 
   // list media route
   medias: undefined,
@@ -78,12 +80,21 @@ export const mediaSlice = createSlice({
 
 export const addMedia = createAsyncThunk(
   "media/addMedia",
-  async (_payload, { dispatch }) => {
-    const { newMediaUrl } = store.getState().media
+  async (newMediaUrl: string, {  dispatch }) => {
+    const { downloadingMediaCount } = store.getState().media
+
+    function updateCount() {
+      const { downloadingMediaCount: newDownloadingMediaCount } = store.getState().media
+      dispatch(mediaActions.updateSlice({ downloadingMediaCount: newDownloadingMediaCount - 1 }))
+    }
+
     try {
+      dispatch(mediaActions.updateSlice({ downloadingMediaCount: downloadingMediaCount + 1 }))
       await MediaService.postMedia({ media_url: newMediaUrl })
+      updateCount()
       await appDispatch(queryMedia())
     } catch (e) {
+      updateCount()
       dispatch(
         mainActions.addNotification({
           content: getApiErrorMessage(e),

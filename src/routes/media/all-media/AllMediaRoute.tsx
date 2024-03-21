@@ -51,7 +51,7 @@ import { Breakpoints } from "../../../common/constants"
 
 export function Component() {
   const { toolsOpen } = useSelector(mainSelector)
-  const { asyncStatus, medias, selectedItems } = useSelector(mediaSelector)
+  const { asyncStatus, medias, selectedItems, downloadingMediaCount } = useSelector(mediaSelector)
   const { width } = useWindowSize()
   const isOnlyOneSelected = selectedItems.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
@@ -64,8 +64,7 @@ export function Component() {
     const text = await navigator.clipboard.readText()
 
     if (text.trim() !== "") {
-      appDispatch(mediaActions.updateSlice({ newMediaUrl: text }))
-      appDispatch(addMedia())
+      appDispatch(addMedia(text))
     } else {
       appDispatch(mainActions.addNotification({
         type: "error",
@@ -106,7 +105,7 @@ export function Component() {
             iconName="add-plus"
             loading={asyncStatus["addMedia"] === "pending"}
           >
-            Add media
+            {downloadingMediaCount > 0 ? downloadingMediaCount : "Add media"}
           </CloudButton>
           <CloudButton
             disabled={selectedItems.length === 0}
@@ -227,7 +226,6 @@ export function Component() {
         items={medias || []}
         loadingText="Loading media"
         // selectionType="multi"
-        // selectionType="multi"
         trackBy="id"
         variant="full-page"
         visibleSections={["albums", "image"]}
@@ -269,8 +267,10 @@ export function Component() {
                     variant="primary"
                     onClick={onCreate}
                     iconName="add-plus"
-                    loading={asyncStatus["addMedia"] === "pending"}
-                  />
+                    loadingText="Adding media"
+                  >
+                    {downloadingMediaCount > 0 && downloadingMediaCount}
+                  </CloudButton>
                 </SpaceBetween>
               )
             }
