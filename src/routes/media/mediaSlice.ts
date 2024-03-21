@@ -20,6 +20,7 @@ export interface MediaState {
   medias: Array<Media> | undefined;
   noMoreMedia: boolean;
   selectedItems: Array<Media>;
+  listMode: "edit" | "view";
 }
 
 const initialState: MediaState = {
@@ -35,6 +36,7 @@ const initialState: MediaState = {
   medias: undefined,
   noMoreMedia: false,
   selectedItems: [],
+  listMode: "view",
 }
 
 export const mediaSlice = createSlice({

@@ -2,7 +2,7 @@ import { Alert, Box, Cards, Header, HelpPanel, SpaceBetween, Spinner, TextConten
 import React, { Fragment, useEffect, useState } from "react"
 import { uuid } from "../../../common/typedUtils"
 import { useSelector } from "react-redux"
-import { addMedia, deleteMedias, mediaActions, mediaSelector, queryMedia, queryMoreMedia } from "../mediaSlice"
+import { deleteMedias, mediaActions, mediaSelector, queryMedia, queryMoreMedia } from "../mediaSlice"
 import { appDispatch } from "../../../common/store"
 import ConfirmModal from "../../../components/ConfirmModal"
 import BadgeLink from "../../../components/BadgeLink"
@@ -12,6 +12,7 @@ import CloudButton from "../../../components/CloudButton"
 import useWindowSize from "../../../hooks/useWindowSize"
 import { Breakpoints } from "../../../common/constants"
 import "./style.css"
+import { AddMediaButton, RefreshButton } from "./Buttons"
 
 // const items: Media[] = [
 //   {
@@ -52,27 +53,11 @@ import "./style.css"
 
 export function Component() {
   const { toolsOpen } = useSelector(mainSelector)
-  const { asyncStatus, medias, selectedItems, downloadingMediaCount } = useSelector(mediaSelector)
+  const { asyncStatus, medias, selectedItems } = useSelector(mediaSelector)
   const { width } = useWindowSize()
   const isOnlyOneSelected = selectedItems.length === 1
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
 
-  function onRefresh() {
-    appDispatch(queryMedia())
-  }
-
-  async function onCreate() {
-    const text = await navigator.clipboard.readText()
-
-    if (text.trim() !== "") {
-      appDispatch(addMedia(text))
-    } else {
-      appDispatch(mainActions.addNotification({
-        type: "error",
-        content: "No URL found in clipboard",
-      }))
-    }
-  }
 
   function onDelete() {
     const mediaIds = selectedItems.map((media) => media.id!)
@@ -94,21 +79,8 @@ export function Component() {
     const tools = (
       <HelpPanel header={<h2>Media Actions</h2>}>
         <SpaceBetween size="s" direction="horizontal">
-          <CloudButton
-            onClick={onRefresh}
-            iconName="refresh"
-            loading={asyncStatus["queryMedia"] === "pending"}
-          >
-            Refresh
-          </CloudButton>
-          <div className="add-media">
-            <CloudButton
-              onClick={onCreate}
-              iconName="add-plus"
-            >
-              {downloadingMediaCount > 0 ? `Adding ${downloadingMediaCount}` : "Add media"}
-            </CloudButton>
-          </div>
+          <RefreshButton />
+          <AddMediaButton />
           <CloudButton
             disabled={selectedItems.length === 0}
             onClick={onShowDelete}
@@ -240,7 +212,6 @@ export function Component() {
           >
             <SpaceBetween size="m">
               <b>No media</b>
-              {/*<CloudButton onClick={onCreate}>Add media</CloudButton>*/}
             </SpaceBetween>
           </Box>
         }
@@ -261,19 +232,11 @@ export function Component() {
                   direction="horizontal"
                 >
                   <CloudButton
-                    onClick={onRefresh}
-                    iconName="refresh"
-                    loading={asyncStatus["queryMedia"] === "pending"}
+                    onClick={() => {}}
+                    iconName="edit"
                   />
-                  <div className="add-media">
-                    <CloudButton
-                      variant="primary"
-                      onClick={onCreate}
-                      iconName="add-plus"
-                    >
-                      {downloadingMediaCount > 0 ? `Adding ${downloadingMediaCount}` : "Add media"}
-                    </CloudButton>
-                  </div>
+                  <RefreshButton />
+                  <AddMediaButton />
                 </SpaceBetween>
               )
             }
