@@ -97,7 +97,7 @@ export function Component() {
           <CloudButton
             onClick={onRefresh}
             iconName="refresh"
-            disabled={asyncStatus["queryMedia"] === "pending"}
+            loading={asyncStatus["queryMedia"] === "pending"}
           >
             Refresh
           </CloudButton>
@@ -263,7 +263,7 @@ export function Component() {
                   <CloudButton
                     onClick={onRefresh}
                     iconName="refresh"
-                    disabled={asyncStatus["queryMedia"] === "pending"}
+                    loading={asyncStatus["queryMedia"] === "pending"}
                   />
                   <div className="add-media">
                     <CloudButton
