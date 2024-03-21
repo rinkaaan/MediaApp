@@ -11,6 +11,7 @@ import useScrollToBottom from "../../../hooks/useScrollToBottom"
 import CloudButton from "../../../components/CloudButton"
 import useWindowSize from "../../../hooks/useWindowSize"
 import { Breakpoints } from "../../../common/constants"
+import "./style.css"
 
 // const items: Media[] = [
 //   {
@@ -100,13 +101,14 @@ export function Component() {
           >
             Refresh
           </CloudButton>
-          <CloudButton
-            onClick={onCreate}
-            iconName="add-plus"
-            loading={asyncStatus["addMedia"] === "pending"}
-          >
-            {downloadingMediaCount > 0 ? downloadingMediaCount : "Add media"}
-          </CloudButton>
+          <div className="add-media">
+            <CloudButton
+              onClick={onCreate}
+              iconName="add-plus"
+            >
+              {downloadingMediaCount > 0 ? `Adding ${downloadingMediaCount}` : "Add media"}
+            </CloudButton>
+          </div>
           <CloudButton
             disabled={selectedItems.length === 0}
             onClick={onShowDelete}
@@ -263,14 +265,15 @@ export function Component() {
                     iconName="refresh"
                     disabled={asyncStatus["queryMedia"] === "pending"}
                   />
-                  <CloudButton
-                    variant="primary"
-                    onClick={onCreate}
-                    iconName="add-plus"
-                    loadingText="Adding media"
-                  >
-                    {downloadingMediaCount > 0 && downloadingMediaCount}
-                  </CloudButton>
+                  <div className="add-media">
+                    <CloudButton
+                      variant="primary"
+                      onClick={onCreate}
+                      iconName="add-plus"
+                    >
+                      {downloadingMediaCount > 0 ? `Adding ${downloadingMediaCount}` : "Add media"}
+                    </CloudButton>
+                  </div>
                 </SpaceBetween>
               )
             }
