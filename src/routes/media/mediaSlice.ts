@@ -180,12 +180,15 @@ export const deleteMedias = createAsyncThunk(
   async (mediaIds: Array<string>, { dispatch }) => {
     await MediaService.deleteMedia({ media_ids: mediaIds })
     dispatch(
-      mainActions.addNotification({
-        content: "Media(s) deleted",
-        type: "success",
-      }),
+        mainActions.updateSlice({
+        mainModalVisible: true,
+        mainModalMessage: "Media(s) deleted",
+        mainModalHeader: "Success",
+        mainModalAlertType: "success"
+      })
     )
     appDispatch(queryMedia())
+    appDispatch(mediaActions.updateSlice({ listMode: "view" }))
   }
 )
 

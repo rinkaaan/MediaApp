@@ -99,6 +99,7 @@ export default function MainLayout() {
               }}
               onFollow={e => {
                 e.preventDefault()
+                navigate(e.detail.href)
               }}
               activeHref={activeHref}
               items={items}

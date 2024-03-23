@@ -224,7 +224,7 @@ export function Component() {
         entireCardClickable={true}
         items={albums || []}
         loadingText="Loading albums"
-        selectionType="multi"
+        // selectionType="multi"
         trackBy="name"
         variant="full-page"
         visibleSections={["type", "image"]}

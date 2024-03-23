@@ -18,10 +18,14 @@ export function AddMediaButton() {
     if (text.trim() !== "") {
       appDispatch(addMedia(text))
     } else {
-      appDispatch(mainActions.addNotification({
-        type: "error",
-        content: "No URL found in clipboard",
-      }))
+      appDispatch(
+        mainActions.updateSlice({
+        mainModalVisible: true,
+        mainModalMessage: "No URL found in clipboard",
+        mainModalHeader: "Error",
+        mainModalAlertType: "error"
+      })
+    )
     }
   }
 

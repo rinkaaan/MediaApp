@@ -18,11 +18,13 @@ export default function MainLayoutError() {
         errorMessage = errorAny.toString()
       }
       appDispatch(
-        mainActions.addNotification({
-          type: "error",
-          content: errorMessage,
-        }),
-      )
+        mainActions.updateSlice({
+          mainModalVisible: true,
+          mainModalMessage: errorMessage,
+          mainModalHeader: "Error",
+          mainModalAlertType: "error",
+        }
+      ))
     }
     navigate("/media", { replace: true })
   }, [error])

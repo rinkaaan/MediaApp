@@ -101,9 +101,11 @@ export const addAlbum = createAsyncThunk(
     try {
       const { name } = await AlbumService.postAlbum({ name: newAlbumName })
       dispatch(
-        mainActions.addNotification({
-          content: `${name} album created`,
-          type: "success",
+        mainActions.updateSlice({
+          mainModalVisible: true,
+          mainModalMessage: `${name} album created`,
+          mainModalHeader: "Success",
+          mainModalAlertType: "success",
         }),
       )
       appDispatch(queryAlbums())
@@ -123,9 +125,11 @@ export const renameAlbum = createAsyncThunk(
     const { renameAlbumName, renameAlbumId } = store.getState().album
     await AlbumService.putAlbumRename({ album_id: renameAlbumId, new_name: renameAlbumName })
     dispatch(
-      mainActions.addNotification({
-        content: "Album renamed",
-        type: "success",
+      mainActions.updateSlice({
+        mainModalVisible: true,
+        mainModalMessage: "Album renamed",
+        mainModalHeader: "Success",
+        mainModalAlertType: "success",
       }),
     )
     appDispatch(queryAlbums())
@@ -163,9 +167,11 @@ export const deleteAlbums = createAsyncThunk(
   async (albumIds: Array<string>, { dispatch }) => {
     await AlbumService.deleteAlbum({ album_ids: albumIds })
     dispatch(
-      mainActions.addNotification({
-        content: "Albums deleted",
-        type: "success",
+      mainActions.updateSlice({
+        mainModalVisible: true,
+        mainModalMessage: "Albums deleted",
+        mainModalHeader: "Success",
+        mainModalAlertType: "success",
       }),
     )
     appDispatch(queryAlbums())
