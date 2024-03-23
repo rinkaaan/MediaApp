@@ -106,9 +106,11 @@ export const addMedia = createAsyncThunk(
     } catch (e) {
       updateCount()
       dispatch(
-        mainActions.addNotification({
-          content: getApiErrorMessage(e),
-          type: "error",
+        mainActions.updateSlice({
+          mainModalVisible: true,
+          mainModalMessage: getApiErrorMessage(e),
+          mainModalHeader: "Error",
+          mainModalAlertType: "error"
         }),
       )
     }

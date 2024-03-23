@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected, PayloadAction } from "@reduxjs/toolkit"
-import { FlashbarProps } from "@cloudscape-design/components"
+import { AlertProps, FlashbarProps } from "@cloudscape-design/components"
 import { AsyncStatus, uuid } from "../common/typedUtils"
 import type { RootState } from "../common/reducers"
 import React from "react"
@@ -12,9 +12,10 @@ export interface MainState {
   toolsHidden: boolean;
   tools: React.ReactNode;
   notifications: Array<FlashbarProps.MessageDefinition>;
-  dirty: boolean;
-  dirtyModalVisible: boolean;
-  dirtyRedirectUrl?: string;
+  mainModalVisible: boolean;
+  mainModalHeader?: string;
+  mainModalMessage?: string;
+  mainModalAlertType?: AlertProps.Type;
   lockScroll?: boolean;
   startingPath?: string;
   username: string;
@@ -29,9 +30,10 @@ const initialState: MainState = {
   toolsHidden: true,
   tools: null,
   notifications: [],
-  dirty: false,
-  dirtyModalVisible: false,
-  dirtyRedirectUrl: undefined,
+  mainModalVisible: false,
+  mainModalHeader: undefined,
+  mainModalMessage: undefined,
+  mainModalAlertType: undefined,
   lockScroll: false,
   startingPath: undefined,
   username: "",
@@ -60,11 +62,6 @@ export const mainSlice = createSlice({
     },
     removeNotification(state, action: PayloadAction<string>) {
       state.notifications = state.notifications.filter(n => n.id !== action.payload)
-    },
-    resetDirty(state) {
-      state.dirty = false
-      state.dirtyModalVisible = false
-      state.dirtyRedirectUrl = undefined
     },
     resetSlice: () => {
       return initialState
