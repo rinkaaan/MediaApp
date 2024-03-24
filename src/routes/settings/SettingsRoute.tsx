@@ -1,5 +1,5 @@
-import { Alert, Button, Container, ContentLayout, Form, FormField, Header, Input, SpaceBetween } from "@cloudscape-design/components"
-import { mainActions, mainSelector, ping } from "../mainSlice"
+import { Alert, Button, Container, ContentLayout, FileUpload, Form, FormField, Header, Input, SpaceBetween } from "@cloudscape-design/components"
+import { mainActions, mainSelector, ping, updateCookies } from "../mainSlice"
 import { appDispatch } from "../../common/store"
 import React, { useEffect, useState } from "react"
 import Cookies from "js-cookie"
@@ -7,7 +7,7 @@ import { OpenAPI } from "../../../openapi-client"
 import { useSelector } from "react-redux"
 
 export function Component() {
-  const { isAuthenticated, asyncStatus } = useSelector(mainSelector)
+  const { isAuthenticated, asyncStatus, newCookies } = useSelector(mainSelector)
   const [username, setUsername] = useState(Cookies.get("username") || "")
   const [password, setPassword] = useState(Cookies.get("password") || "")
   const [saved, setSaved] = useState(true)
@@ -60,10 +60,6 @@ export function Component() {
     <Alert type="error">Unauthorized</Alert>
   )
 
-  const AuthorizedAlert = (
-    <Alert type="success">Authorized</Alert>
-  )
-
   const AuthorizingAlert = (
     <Alert type="info">Authorizing</Alert>
   )
@@ -73,40 +69,81 @@ export function Component() {
     formButton = isAuthenticated ? LogoutButton : LoginButton
   }
 
+  function onUpdateCookies() {
+    appDispatch(updateCookies())
+  }
+
   return (
     <ContentLayout
       header={
         <Header variant="h1">Settings</Header>
       }
     >
-      <Form actions={formButton}>
+      <Form>
         <SpaceBetween size="l">
-          <Container>
-            <form>
-              <SpaceBetween size="s">
-                <FormField label="Username">
-                  <Input
-                    placeholder="Enter value"
-                    value={username}
-                    onChange={(e) => setUsername(e.detail.value)}
-                    disabled={isAuthenticated || isAuthenticated === undefined}
-                  />
-                </FormField>
-                <FormField label="Password">
-                  <Input
-                    placeholder="Enter value"
-                    value={password}
-                    onChange={(e) => setPassword(e.detail.value)}
-                    disabled={isAuthenticated || isAuthenticated === undefined}
-                    type="password"
-                  />
-                </FormField>
-              </SpaceBetween>
-            </form>
+          <Container header={<Header variant="h2">Credentials</Header>}>
+            <SpaceBetween size="l">
+              <form>
+                <SpaceBetween size="s">
+                  <FormField label="Username">
+                    <Input
+                      placeholder="Enter value"
+                      value={username}
+                      onChange={(e) => setUsername(e.detail.value)}
+                      disabled={isAuthenticated || isAuthenticated === undefined}
+                    />
+                  </FormField>
+                  <FormField label="Password">
+                    <Input
+                      placeholder="Enter value"
+                      value={password}
+                      onChange={(e) => setPassword(e.detail.value)}
+                      disabled={isAuthenticated || isAuthenticated === undefined}
+                      type="password"
+                    />
+                  </FormField>
+                </SpaceBetween>
+              </form>
+              {asyncStatus["ping"] === "rejected" && loginAttempted && UnauthorizedAlert}
+              {asyncStatus["ping"] === "pending" && loginAttempted && AuthorizingAlert}
+              {formButton}
+            </SpaceBetween>
           </Container>
-          {asyncStatus["ping"] === "rejected" && loginAttempted && UnauthorizedAlert}
-          {asyncStatus["ping"] === "fulfilled" && AuthorizedAlert}
-          {asyncStatus["ping"] === "pending" && loginAttempted && AuthorizingAlert}
+          {
+            isAuthenticated && (
+              <Container header={<Header variant="h2">Cookies</Header>}>
+                <SpaceBetween size="l">
+                  <FileUpload
+                    onChange={({ detail }) => appDispatch(mainActions.updateSlice({ newCookies: detail.value })) }
+                    value={newCookies}
+                    i18nStrings={{
+                      uploadButtonText: e =>
+                        e ? "Choose files" : "Choose file",
+                      dropzoneText: e =>
+                        e
+                          ? "Drop files to upload"
+                          : "Drop file to upload",
+                      removeFileAriaLabel: e =>
+                        `Remove file ${e + 1}`,
+                      limitShowFewer: "Show fewer files",
+                      limitShowMore: "Show more files",
+                      errorIconAriaLabel: "Error"
+                    }}
+                    accept=".txt"
+                    showFileSize
+                    tokenLimit={1}
+                    constraintText="Upload a .txt file to update cookies"
+                  />
+                  <Button
+                    variant="primary"
+                    disabled={newCookies.length === 0}
+                    onClick={onUpdateCookies}
+                    loading={asyncStatus["updateCookies"] === "pending"}
+                  >Update</Button>
+                </SpaceBetween>
+              </Container>
+            )
+          }
         </SpaceBetween>
       </Form>
     </ContentLayout>

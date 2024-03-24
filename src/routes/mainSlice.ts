@@ -3,8 +3,9 @@ import { AlertProps, FlashbarProps } from "@cloudscape-design/components"
 import { AsyncStatus, uuid } from "../common/typedUtils"
 import type { RootState } from "../common/reducers"
 import React from "react"
-import { DefaultService } from "../../openapi-client"
+import { DefaultService, OpenAPI } from "../../openapi-client"
 import { getActionName } from "../common/utils"
+import axios from "axios"
 
 export interface MainState {
   navigationOpen: boolean;
@@ -22,6 +23,9 @@ export interface MainState {
   password: string;
   isAuthenticated?: boolean;
   asyncStatus: Record<string, AsyncStatus>;
+  settingsSaved: boolean;
+  settingsLoginAttempted: boolean;
+  newCookies: File[];
 }
 
 const initialState: MainState = {
@@ -38,7 +42,11 @@ const initialState: MainState = {
   startingPath: undefined,
   username: "",
   password: "",
+  isAuthenticated: undefined,
   asyncStatus: {},
+  settingsSaved: false,
+  settingsLoginAttempted: false,
+  newCookies: [],
 }
 
 type Notification = Pick<FlashbarProps.MessageDefinition, "type" | "content">
@@ -92,6 +100,23 @@ export const ping = createAsyncThunk(
       throw e
     }
   },
+)
+
+export const updateCookies = createAsyncThunk(
+  "main/updateCookies",
+  async (_payload, { getState, dispatch }) => {
+    const getState2 = getState as () => RootState
+    const { newCookies } = getState2().main
+    const formData = new FormData()
+    formData.append("cookies", newCookies[0])
+    await axios.postForm(OpenAPI.BASE + "/main/cookies", formData, {
+      auth: {
+        username: OpenAPI.USERNAME as string,
+        password: OpenAPI.PASSWORD as string,
+      },
+    })
+    dispatch(mainActions.updateSlice({ newCookies: [] }))
+  }
 )
 
 export const mainReducer = mainSlice.reducer
