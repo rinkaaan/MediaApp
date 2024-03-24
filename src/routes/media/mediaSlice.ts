@@ -91,6 +91,7 @@ export const mediaSlice = createSlice({
 export const addMedia = createAsyncThunk(
   "media/addMedia",
   async (newMediaUrl: string, {  dispatch }) => {
+    const { toolsOpen } = store.getState().main
     const { downloadingMediaCount } = store.getState().media
 
     function updateCount() {
@@ -102,7 +103,9 @@ export const addMedia = createAsyncThunk(
       dispatch(mediaActions.updateSlice({ downloadingMediaCount: downloadingMediaCount + 1 }))
       await MediaService.postMedia({ media_url: newMediaUrl })
       updateCount()
-      await appDispatch(queryMedia())
+      if (!toolsOpen) {
+        await appDispatch(queryMedia())
+      }
     } catch (e) {
       updateCount()
       dispatch(
