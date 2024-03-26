@@ -123,28 +123,12 @@ export const addMedia = createAsyncThunk(
 export const queryMedia = createAsyncThunk(
   "media/queryMedia",
   async (_payload, { dispatch }) => {
-    const queryMediaOut = await MediaService.getMediaQuery(undefined, 30, true)
+    const queryMediaOut = await MediaService.getMediaQuery(undefined, undefined, true)
     dispatch(mediaActions.updateSlice({ medias: queryMediaOut.media, noMoreMedia: queryMediaOut.no_more_media, selectedItems: [] }))
     await sleep(100)
     dispatch(mediaActions.updateSlice({ listFirstLoad: false }))
   }
 )
-
-// export const queryMoreAlbums = createAsyncThunk(
-//   "album/queryMoreAlbums",
-//   async (_payload, { dispatch }) => {
-//     const { albums: curAlbums, noMoreAlbums } = store.getState().album
-//     if (noMoreAlbums || !curAlbums) return
-//     const lastId = curAlbums[curAlbums.length - 1].id
-//     if (!lastId) return
-//     const queryAlbumsOut = await AlbumService.getAlbumQuery(lastId, 30, true)
-//     if (!queryAlbumsOut.albums || queryAlbumsOut.albums?.length === 0) {
-//       dispatch(albumActions.updateSlice({ noMoreMedia: true }))
-//     } else {
-//       dispatch(albumActions.updateSlice({ albums: [...curAlbums, ...queryAlbumsOut.albums], noMoreMedia: queryAlbumsOut.no_more_albums }))
-//     }
-//   }
-// )
 
 export const queryMoreMedia = createAsyncThunk(
   "media/queryMoreMedia",
@@ -153,7 +137,7 @@ export const queryMoreMedia = createAsyncThunk(
     if (noMoreMedia || !curMedias) return
     const lastId = curMedias[curMedias.length - 1].created_at_ksuid
     if (!lastId) return
-    const queryMediaOut = await MediaService.getMediaQuery(lastId, 30, true)
+    const queryMediaOut = await MediaService.getMediaQuery(lastId, undefined, true)
     if (!queryMediaOut.media || queryMediaOut.media?.length === 0) {
       dispatch(mediaActions.updateSlice({ noMoreMedia: true }))
     } else {
@@ -161,22 +145,6 @@ export const queryMoreMedia = createAsyncThunk(
     }
   }
 )
-
-// export const deleteAlbums = createAsyncThunk(
-//   "album/deleteAlbums",
-//   async (albumIds: Array<string>, { dispatch }) => {
-//     await AlbumService.deleteAlbum({ album_ids: albumIds })
-//     dispatch(
-//       mainActions.addNotification({
-//         content: "Albums deleted",
-//         type: "success",
-//       }),
-//     )
-//     let { albums } = store.getState().album
-//     if (!albums) albums = []
-//     dispatch(albumActions.updateSlice({ albums: albums.filter(a => !albumIds.includes(a.id!)) }))
-//   }
-// )
 
 export const deleteMedias = createAsyncThunk(
   "media/deleteMedias",

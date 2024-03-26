@@ -140,7 +140,7 @@ export const queryAlbums = createAsyncThunk(
   "album/queryAlbums",
   async (_payload, { dispatch }) => {
     const { searchQuery } = store.getState().album
-    const queryAlbumsOut = await AlbumService.getAlbumQuery(undefined, 30, true, searchQuery)
+    const queryAlbumsOut = await AlbumService.getAlbumQuery(undefined, undefined, true, searchQuery)
     dispatch(albumActions.updateSlice({ albums: queryAlbumsOut.albums, noMoreAlbums: queryAlbumsOut.no_more_albums, selectedAlbums: [] }))
     await sleep(100)
   },
@@ -153,7 +153,7 @@ export const queryMoreAlbums = createAsyncThunk(
     if (noMoreAlbums || !curAlbums) return
     const lastId = curAlbums[curAlbums.length - 1].id
     if (!lastId) return
-    const queryAlbumsOut = await AlbumService.getAlbumQuery(lastId, 30, true)
+    const queryAlbumsOut = await AlbumService.getAlbumQuery(lastId, undefined, true)
     if (!queryAlbumsOut.albums || queryAlbumsOut.albums?.length === 0) {
       dispatch(albumActions.updateSlice({ noMoreAlbums: true }))
     } else {

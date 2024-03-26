@@ -207,7 +207,7 @@ export function Component() {
               id: "image",
               content: item => (
                 <img
-                  src={item.thumbnail_path}
+                  src={import.meta.env.VITE_CDN_PREFIX + item.thumbnail_path}
                   style={{
                     width: "100%",
                     height: "auto",
