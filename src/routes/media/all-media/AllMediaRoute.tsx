@@ -88,7 +88,8 @@ export function Component() {
   return (
     <Fragment>
       <Cards
-        loading={asyncStatus["queryMedia"] === "pending" || medias === undefined}
+        // loading={asyncStatus["queryMedia"] === "pending" || medias === undefined}
+        loading={medias === undefined}
         onSelectionChange={({ detail }) => {
           appDispatch(mediaActions.updateSlice({ selectedItems: detail?.selectedItems ?? [] }))
         }}
